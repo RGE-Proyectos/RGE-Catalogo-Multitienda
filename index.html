@@ -173,8 +173,8 @@
         if (error) throw error;
 
         todosLosProductos = data.map(p => {
-          const precio = p.sale_price !== undefined ? p.sale_price : 0;
-const costo = p.cost_price !== undefined ? p.cost_price : 0;
+          const precio = p.product_prices && p.product_prices.length > 0 ? p.product_prices[0].sale_price : 0;
+const costo = p.product_prices && p.product_prices.length > 0 ? p.product_prices[0].cost_price : 0;
           const stock = p.inventory_stocks && p.inventory_stocks.length > 0 ? p.inventory_stocks[0].stock_qty : 0;
           const imagen = p.attributes && p.attributes.imagen_url ? p.attributes.imagen_url : '';
           const categoria = p.categories ? p.categories.name : 'General';
