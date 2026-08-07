@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catálogo & Control de Inventario</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- FontAwesome / Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#3b82f6',
+              600: '#2563eb',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen pb-12 transition-colors duration-200">
+
+  <!-- BARRA DE NAVEGACIÓN Y BUSCADOR (FIXED TOP) -->
+  <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 p-3 shadow-lg">
+    <div class="max-w-4xl mx-auto flex flex-col gap-3">
+      
+      <!-- Fila Superior: Título, Modo, Clave Propietario -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="store" class="text-blue-500 w-6 h-6"></i>
+          <h1 class="font-bold text-lg tracking-wide">RGE Control</h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Modos de vista: Cliente / Propietario -->
+          <button id="btnRole" onclick="toggleRoleModal()" class="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 font-semibold text-slate-300 hover:border-blue-500 transition-all">
+            <span id="roleBadge">👁️ Vista: Cliente</span>
+          </button>
+
+          <!-- Toggle Dark / Light -->
+          <button onclick="toggleTheme()" class="p-2 bg-slate-800 rounded-full border border-slate-700 text-slate-300 hover:text-white">
+            <i data-lucide="sun-moon" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Buscador Principal -->
+      <div class="relative">
+        <i data-lucide="search" class="absolute left-3.5 top-3 w-5 h-5 text-slate-400"></i>
+        <input 
+          type="text" 
+          id="searchInput" 
+          oninput="filtrarProductos()"
+          placeholder="Escribe el nombre o SKU del producto..." 
+          class="w-full bg-slate-800 border border-slate-700 rounded-xl pl-11 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-100 placeholder-slate-400 shadow-inner"
+        />
+        <button id="btnClear" onclick="limpiarBusqueda()" class="hidden absolute right-3 top-2.5 text-slate-400 hover:text-white">
+          <i data-lucide="x-circle" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Barra de Filtro de Categorías -->
+      <div id="categoriesBar" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+        <button onclick="filtrarCategoria('')" class="cat-btn active bg-blue-600 text-white px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all">
+          Todos
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- CONTENEDOR DE TARJETAS (GRID) -->
+  <main class="max-w-4xl mx-auto p-3 mt-2">
+    <!-- Estado de Carga / Sin Resultados -->
+    <div id="loading" class="text-center py-12 text-slate-400">
+      <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto text-blue-500 mb-2"></i>
+      <p class="text-sm">Cargando inventario desde Supabase...</p>
+    </div>
+
+    <div id="gridProductos" class="grid grid-cols-1 sm:grid-cols-2 gap-3 hidden">
+      <!-- Las tarjetas se generan dinámicamente -->
+    </div>
+  </main>
+
+  <!-- MODAL CLAVE PROPIETARIO -->
+  <div id="pinModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-xs text-center shadow-2xl">
+      <div class="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+        <i data-lucide="lock" class="w-6 h-6"></i>
+      </div>
+      <h3 class="font-bold text-lg mb-1">Acceso Propietario</h3>
+      <p class="text-xs text-slate-400 mb-4">Ingresa tu clave de seguridad para desbloquear los datos sensibles.</p>
+      
+      <input 
+        type="password" 
+        id="pinInput" 
+        maxlength="4"
+        placeholder="••••" 
+        class="w-full text-center text-2xl tracking-widest bg-slate-900 border border-slate-700 rounded-xl py-2 mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
+      />
+      
+      <div class="flex gap-2">
+        <button onclick="cerrarPinModal()" class="flex-1 py-2 text-xs bg-slate-700 hover:bg-slate-600 rounded-xl font-medium">Cancelar</button>
+        <button onclick="validarPIN()" class="flex-1 py-2 text-xs bg-blue-600 hover:bg-blue-500 rounded-xl font-medium text-white">Ingresar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DETALLE DE PRODUCTO -->
+  <div id="detailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden p-0 sm:p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-t-3xl sm:rounded-2xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl relative">
+      <button onclick="cerrarDetalle()" class="absolute right-4 top-4 p-2 text-slate-400 hover:text-white bg-slate-700/50 rounded-full">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div id="modalContent">
+        <!-- Contenido inyectado dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT DE INTEGRACIÓN -->
+  <script>
+    // -------------------------------------------------------------
+    // CONFIGURACIÓN DE SUPABASE Y CONSTANTES
+    // -------------------------------------------------------------
+    const SUPABASE_URL = "https://https://zvtirryhqxxldceumfjs.supabase.co"; // Pon tu Project URL aquí
+    const SUPABASE_KEY = "sb_publishable_D6OqQEeNZWqXIE9I0qfz_A_9ilgTB4t";             // Pon tu Publishable Key aquí
+    const PIN_CORRECTO = "7200";                            // Tu clave de propietario
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let todosLosProductos = [];
+    let categorias = [];
+    let categoriaActiva = "";
+    let esPropietario = false;
+
+    // -------------------------------------------------------------
+    // INICIALIZACIÓN
+    // -------------------------------------------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      cargarInventario();
+    });
+
+    // -------------------------------------------------------------
+    // CONSULTA A SUPABASE (RELACIÓN PRODUCTS + PRICES + STOCKS)
+    // -------------------------------------------------------------
+    async function cargarInventario() {
+      try {
+        // Consultar productos uniendo precios e inventario
+        const { data, error } = await supabaseClient
+          .from('products')
+          .select(`
+            id,
+            sku,
+            name,
+            description,
+            attributes,
+            categories ( name ),
+            product_prices ( sale_price, cost_price ),
+            inventory_stocks ( stock_qty )
+          `);
+
+        if (error) throw error;
+
+        todosLosProductos = data.map(p => {
+          const precio = p.product_prices && p.product_prices.length > 0 ? p.product_prices[0].sale_price : 0;
+          const costo = p.product_prices && p.product_prices.length > 0 ? p.product_prices[0].cost_price : 0;
+          const stock = p.inventory_stocks && p.inventory_stocks.length > 0 ? p.inventory_stocks[0].stock_qty : 0;
+          const imagen = p.attributes && p.attributes.imagen_url ? p.attributes.imagen_url : '';
+          const categoria = p.categories ? p.categories.name : 'General';
+
+          return {
+            id: p.id,
+            sku: p.sku,
+            nombre: p.name,
+            descripcion: p.description || p.name,
+            categoria: categoria,
+            precio: parseFloat(precio || 0),
+            costo: parseFloat(costo || 0),
+            stock: parseInt(stock || 0),
+            imagen: imagen,
+            atributos: p.attributes || {}
+          };
+        });
+
+        extraerCategorias();
+        renderizarProductos(todosLosProductos);
+
+        document.getElementById("loading").classList.add("hidden");
+        document.getElementById("gridProductos").classList.remove("hidden");
+
+      } catch (err) {
+        console.error("Error al cargar productos:", err);
+        document.getElementById("loading").innerHTML = `
+          <div class="text-red-400 p-4 bg-red-950/30 rounded-xl border border-red-800">
+            ❌ Error conectando a Supabase. Revisa las llaves de acceso en el código.
+          </div>
+        `;
+      }
+    }
+
+    // -------------------------------------------------------------
+    // BARRA DE CATEGORÍAS
+    // -------------------------------------------------------------
+    function extraerCategorias() {
+      const catSet = new Set(todosLosProductos.map(p => p.categoria));
+      categorias = Array.from(catSet);
+
+      const bar = document.getElementById("categoriesBar");
+      bar.innerHTML = `
+        <button onclick="filtrarCategoria('')" class="cat-btn active bg-blue-600 text-white px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all">
+          Todos (${todosLosProductos.length})
+        </button>
+      `;
+
+      categorias.forEach(cat => {
+        const count = todosLosProductos.filter(p => p.categoria === cat).length;
+        bar.innerHTML += `
+          <button onclick="filtrarCategoria('${cat}')" class="cat-btn bg-slate-800 text-slate-300 border border-slate-700 hover:border-blue-500 px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all">
+            ${cat} (${count})
+          </button>
+        `;
+      });
+    }
+
+    function filtrarCategoria(cat) {
+      categoriaActiva = cat;
+      document.querySelectorAll(".cat-btn").forEach(btn => {
+        btn.classList.remove("bg-blue-600", "text-white");
+        btn.classList.add("bg-slate-800", "text-slate-300");
+      });
+      event.target.classList.add("bg-blue-600", "text-white");
+      filtrarProductos();
+    }
+
+    // -------------------------------------------------------------
+    // RENDERIZADO DE PRODUCTOS EN RETÍCULA
+    // -------------------------------------------------------------
+    function renderizarProductos(lista) {
+      const grid = document.getElementById("gridProductos");
+      grid.innerHTML = "";
+
+      if (lista.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12 text-slate-400">
+            <p class="text-sm">No se encontraron productos coincidentes.</p>
+          </div>
+        `;
+        return;
+      }
+
+      lista.forEach(p => {
+        // Indicador de Stock
+        let badgeStock = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold px-2 py-0.5 rounded-full">Disponibles: ${p.stock}</span>`;
+        if (p.stock === 0) {
+          badgeStock = `<span class="bg-red-500/10 text-red-400 border border-red-500/20 text-[11px] font-semibold px-2 py-0.5 rounded-full">Agotado</span>`;
+        } else if (p.stock <= 3) {
+          badgeStock = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px] font-semibold px-2 py-0.5 rounded-full">Bajo stock: ${p.stock}</span>`;
+        }
+
+        const imagenHtml = p.imagen 
+          ? `<img src="${p.imagen}" alt="${p.nombre}" class="w-full h-36 object-contain p-2 rounded-xl bg-slate-950/40" />`
+          : `<div class="w-full h-36 bg-slate-950/40 rounded-xl flex items-center justify-center text-slate-600"><i data-lucide="package" class="w-10 h-10"></i></div>`;
+
+        // Datos extendidos solo para Propietario
+        const bloquePropietario = esPropietario ? `
+          <div class="mt-3 pt-2 border-t border-slate-700/60 text-[11px] grid grid-cols-2 gap-1 text-slate-400">
+            <div>Coste: <b class="text-slate-200">$${p.costo.toFixed(2)}</b></div>
+            <div>Margen: <b class="text-emerald-400">${p.costo > 0 ? Math.round(((p.precio - p.costo)/p.costo)*100) : 0}%</b></div>
+          </div>
+        ` : '';
+
+        const card = `
+          <div onclick="abrirDetalle('${p.id}')" class="bg-slate-800/80 border border-slate-700/80 hover:border-blue-500/60 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all duration-200 shadow-md">
+            <div>
+              <!-- 1. IMAGEN DEL PRODUCTO -->
+              <div class="relative">
+                ${imagenHtml}
+                <span class="absolute top-2 right-2 text-[10px] bg-slate-900/80 backdrop-blur-md px-2 py-0.5 rounded-md text-slate-300 font-mono border border-slate-700">${p.sku}</span>
+              </div>
+
+              <!-- NOMBRE Y DESCRIPCIÓN -->
+              <h2 class="font-bold text-sm mt-2 text-slate-100 line-clamp-1">${p.nombre}</h2>
+              <p class="text-xs text-slate-400 line-clamp-2 mt-0.5 leading-snug">${p.descripcion}</p>
+            </div>
+
+            <!-- 2. PRECIO REALZADO + 3. STOCK PEQUEÑO -->
+            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-end justify-between">
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Precio</span>
+                <span class="text-xl font-black text-emerald-400 tracking-tight">$${p.precio.toFixed(2)}</span>
+              </div>
+              <div>
+                ${badgeStock}
+              </div>
+            </div>
+
+            ${bloquePropietario}
+          </div>
+        `;
+        grid.innerHTML += card;
+      });
+
+      lucide.createIcons();
+    }
+
+    // -------------------------------------------------------------
+    // BÚSQUEDA Y FILTRADO
+    // -------------------------------------------------------------
+    function filtrarProductos() {
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+      document.getElementById("btnClear").classList.toggle("hidden", q === "");
+
+      const filtrados = todosLosProductos.filter(p => {
+        const coincideCat = categoriaActiva === "" || p.categoria === categoriaActiva;
+        const coincideTexto = p.nombre.toLowerCase().includes(q) || 
+                              p.sku.toLowerCase().includes(q) ||
+                              p.descripcion.toLowerCase().includes(q);
+        return coincideCat && coincideTexto;
+      });
+
+      renderizarProductos(filtrados);
+    }
+
+    function limpiarBusqueda() {
+      document.getElementById("searchInput").value = "";
+      filtrarProductos();
+    }
+
+    // -------------------------------------------------------------
+    // MODAL DE DETALLE Y COMPARTIR WHATSAPP
+    // -------------------------------------------------------------
+    function abrirDetalle(id) {
+      const p = todosLosProductos.find(item => item.id === id);
+      if (!p) return;
+
+      const imagenHtml = p.imagen 
+        ? `<img src="${p.imagen}" class="w-full h-48 object-contain p-2 rounded-xl bg-slate-950/50 mb-3" />`
+        : `<div class="w-full h-32 bg-slate-950/50 rounded-xl flex items-center justify-center text-slate-600 mb-3"><i data-lucide="package" class="w-12 h-12"></i></div>`;
+
+      // Texto preformateado para WhatsApp
+      const mensajeWA = encodeURIComponent(`¡Hola! Me interesa información sobre el producto:\n\n📌 *${p.nombre}*\n🏷️ SKU: ${p.sku}\n💰 Precio: $${p.precio.toFixed(2)}\n\n¿Tienen disponibilidad para entrega?`);
+
+      const contenido = `
+        ${imagenHtml}
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs bg-blue-500/10 text-blue-400 font-semibold px-2 py-0.5 rounded-md border border-blue-500/20">${p.categoria}</span>
+          <span class="text-xs font-mono text-slate-400">SKU: ${p.sku}</span>
+        </div>
+        <h2 class="text-lg font-bold text-slate-100 mb-1">${p.nombre}</h2>
+        <p class="text-xs text-slate-300 leading-relaxed mb-4">${p.descripcion}</p>
+
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/80 mb-4 flex items-center justify-between">
+          <div>
+            <span class="text-[10px] text-slate-400 uppercase block">Precio de Venta</span>
+            <span class="text-2xl font-black text-emerald-400">$${p.precio.toFixed(2)}</span>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 uppercase block">Existencias</span>
+            <span class="text-sm font-bold text-slate-200">${p.stock} unidades</span>
+          </div>
+        </div>
+
+        ${esPropietario ? `
+          <div class="bg-blue-950/30 p-3 rounded-xl border border-blue-800/40 text-xs mb-4 space-y-1">
+            <div class="font-bold text-blue-400 mb-1">🔒 Ficha Técnica de Propietario</div>
+            <div class="flex justify-between"><span>Costo Directo:</span> <b>$${p.costo.toFixed(2)}</b></div>
+            <div class="flex justify-between"><span>Margen Bruto:</span> <b>$${(p.precio - p.costo).toFixed(2)}</b></div>
+            <div class="flex justify-between"><span>Categoría ID:</span> <b class="font-mono">${p.categoria}</b></div>
+          </div>
+        ` : ''}
+
+        <a href="https://wa.me/?text=${mensajeWA}" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm shadow-lg transition-all">
+          <i data-lucide="message-square" class="w-4 h-4"></i>
+          Enviar Ficha por WhatsApp
+        </a>
+      `;
+
+      document.getElementById("modalContent").innerHTML = contenido;
+      document.getElementById("detailModal").classList.remove("hidden");
+      lucide.createIcons();
+    }
+
+    function cerrarDetalle() {
+      document.getElementById("detailModal").classList.add("hidden");
+    }
+
+    // -------------------------------------------------------------
+    // MODO PROPIETARIO & SEGURIDAD PIN
+    // -------------------------------------------------------------
+    function toggleRoleModal() {
+      if (esPropietario) {
+        esPropietario = false;
+        document.getElementById("roleBadge").innerText = "👁️ Vista: Cliente";
+        filtrarProductos();
+      } else {
+        document.getElementById("pinInput").value = "";
+        document.getElementById("pinModal").classList.remove("hidden");
+        document.getElementById("pinInput").focus();
+      }
+    }
+
+    function cerrarPinModal() {
+      document.getElementById("pinModal").classList.add("hidden");
+    }
+
+    function validarPIN() {
+      const input = document.getElementById("pinInput").value;
+      if (input === PIN_CORRECTO) {
+        esPropietario = true;
+        document.getElementById("roleBadge").innerText = "🔓 Vista: Propietario";
+        cerrarPinModal();
+        filtrarProductos();
+      } else {
+        alert("PIN Incorrecto");
+        document.getElementById("pinInput").value = "";
+      }
+    }
+
+    // -------------------------------------------------------------
+    // MODO OSCURO / CLARO
+    // -------------------------------------------------------------
+    function toggleTheme() {
+      const html = document.documentElement;
+      if (html.classList.contains("dark")) {
+        html.classList.remove("dark");
+        document.body.classList.replace("bg-slate-900", "bg-slate-100");
+        document.body.classList.replace("text-slate-100", "text-slate-900");
+      } else {
+        html.classList.add("dark");
+        document.body.classList.replace("bg-slate-100", "bg-slate-900");
+        document.body.classList.replace("text-slate-900", "text-slate-100");
+      }
+    }
+  </script>
+</body>
+</html>
