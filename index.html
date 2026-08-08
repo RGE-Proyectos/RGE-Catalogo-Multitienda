@@ -132,9 +132,9 @@
     // -------------------------------------------------------------
     // CONFIGURACIÓN DE SUPABASE Y CONSTANTES
     // -------------------------------------------------------------
-    const SUPABASE_URL = "https://zvtirryhqxxldceumfjs.supabase.co"; // Pon tu Project URL aquí
-    const SUPABASE_KEY = "sb_publishable_D6OqQEeNZWqXIE9I0qfz_A_9ilgTB4t";             // Pon tu Publishable Key aquí
-    const PIN_CORRECTO = "7200";                            // Tu clave de propietario
+    const SUPABASE_URL = "https://zvtirryhqxxldceumfjs.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_D6OqQEeNZWqXIE9I0qfz_A_9ilgTB4t";
+    const PIN_CORRECTO = "7200";
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -152,12 +152,12 @@
     });
 
     // -------------------------------------------------------------
-    // CONSULTA A SUPABASE (RELACIÓN PRODUCTS + PRICES + STOCKS)
+    // CONSULTA A SUPABASE (PETICIONES PARALELAS ROBUSTAS)
     // -------------------------------------------------------------
     async function cargarInventario() {
       try {
-        // Consultar productos uniendo precios e inventario
-        const { data, error } = await supabaseClient
+        // 1. Petición de Productos y Categorías
+        const pReq = supabaseClient
           .from('products')
           .select(`
             id,
@@ -165,25 +165,64 @@
             name,
             description,
             attributes,
-            categories ( name ),
-            product_prices ( sale_price, cost_price ),
-            inventory_stocks ( stock_qty )
+            category_id,
+            categories ( id, name )
           `);
 
-        if (error) throw error;
+        // 2. Petición Directa de Precios
+        const prReq = supabaseClient
+          .from('product_prices')
+          .select('product_id, sale_price, cost_price');
 
-        todosLosProductos = data.map(p => {
-          const precio = p.product_prices && p.product_prices.length > 0 ? p.product_prices[0].sale_price : 0;
-const costo = p.product_prices && p.product_prices.length > 0 ? p.product_prices[0].cost_price : 0;
-          const stock = p.inventory_stocks && p.inventory_stocks.length > 0 ? p.inventory_stocks[0].stock_qty : 0;
-          const imagen = p.attributes && p.attributes.imagen_url ? p.attributes.imagen_url : '';
-          const categoria = p.categories ? p.categories.name : 'General';
+        // 3. Petición Directa de Stocks
+        const stReq = supabaseClient
+          .from('inventory_stocks')
+          .select('product_id, stock_qty');
+
+        // Ejecutar las 3 peticiones en paralelo
+        const [resP, resPr, resSt] = await Promise.all([pReq, prReq, stReq]);
+
+        if (resP.error) throw resP.error;
+        if (resPr.error) console.warn("Aviso Precios:", resPr.error);
+        if (resSt.error) console.warn("Aviso Stocks:", resSt.error);
+
+        // Crear Mapas de Búsqueda Rápida por product_id
+        const pricesMap = {};
+        if (resPr.data) {
+          resPr.data.forEach(item => {
+            pricesMap[item.product_id] = item;
+          });
+        }
+
+        const stocksMap = {};
+        if (resSt.data) {
+          resSt.data.forEach(item => {
+            stocksMap[item.product_id] = item.stock_qty;
+          });
+        }
+
+        // Mapear productos e integrar los precios y existencias
+        todosLosProductos = resP.data.map(p => {
+          const priceObj = pricesMap[p.id] || {};
+          const precio = priceObj.sale_price !== undefined ? priceObj.sale_price : 0;
+          const costo = priceObj.cost_price !== undefined ? priceObj.cost_price : 0;
+          
+          const stock = stocksMap[p.id] !== undefined ? stocksMap[p.id] : 0;
+          
+          const imagen = (p.attributes && p.attributes.imagen_url) ? p.attributes.imagen_url : '';
+          
+          let categoria = 'General';
+          if (p.categories) {
+            categoria = Array.isArray(p.categories) 
+              ? (p.categories[0] ? p.categories[0].name : 'General')
+              : (p.categories.name || 'General');
+          }
 
           return {
             id: p.id,
-            sku: p.sku,
-            nombre: p.name,
-            descripcion: p.description || p.name,
+            sku: p.sku || '',
+            nombre: p.name || '',
+            descripcion: p.description || p.name || '',
             categoria: categoria,
             precio: parseFloat(precio || 0),
             costo: parseFloat(costo || 0),
@@ -203,7 +242,7 @@ const costo = p.product_prices && p.product_prices.length > 0 ? p.product_prices
         console.error("Error al cargar productos:", err);
         document.getElementById("loading").innerHTML = `
           <div class="text-red-400 p-4 bg-red-950/30 rounded-xl border border-red-800">
-            ❌ Error conectando a Supabase. Revisa las llaves de acceso en el código.
+            ❌ Error conectando a Supabase. Revisa la consola (F12) para más detalles.
           </div>
         `;
       }
