@@ -178,9 +178,29 @@
         if (error) throw error;
 
         todosLosProductos = products.map(p => {
-          const precio = p.product_prices?.[0]?.sale_price || 0;
-          const costo = p.product_prices?.[0]?.cost_price || 0;
-          const stock = p.inventory_stocks?.[0]?.stock_qty || 0;
+          // Extraer precio de forma ULTRA-SEGURA (manejando arrays u objetos)
+          let precio = 0;
+          let costo = 0;
+          let stock = 0;
+
+          if (p.product_prices) {
+            if (Array.isArray(p.product_prices) && p.product_prices.length > 0) {
+              precio = parseFloat(p.product_prices[0].sale_price) || 0;
+              costo = parseFloat(p.product_prices[0].cost_price) || 0;
+            } else if (typeof p.product_prices === 'object') {
+              precio = parseFloat(p.product_prices.sale_price) || 0;
+              costo = parseFloat(p.product_prices.cost_price) || 0;
+            }
+          }
+
+          if (p.inventory_stocks) {
+            if (Array.isArray(p.inventory_stocks) && p.inventory_stocks.length > 0) {
+              stock = parseInt(p.inventory_stocks[0].stock_qty) || 0;
+            } else if (typeof p.inventory_stocks === 'object') {
+              stock = parseInt(p.inventory_stocks.stock_qty) || 0;
+            }
+          }
+
           const categoriaNombre = p.categories?.name || "General";
           const area = p.attributes?.area_negocio || inferirArea(categoriaNombre);
 
