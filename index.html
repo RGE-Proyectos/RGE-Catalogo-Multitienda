@@ -267,19 +267,44 @@ function actualizarContadores() {
       }
     }
 
-    function inferirArea(cat) {
-      cat = cat.toLowerCase();
-      if (cat.includes("foco") || cat.includes("electr")) return "Artículos Eléctricos";
-      if (cat.includes("bisagra") || cat.includes("carretilla") || cat.includes("chapa")) return "Herrajes";
-      if (cat.includes("moto") || cat.includes("refacc")) return "Refacciones para Moto";
-      if (cat.includes("abarrot") || cat.includes("despensa")) return "Abarrotes Básicos";
-      return "Herrajes";
-    }
-
     function renderizarProductos() {
       const grid = document.getElementById("productsGrid");
       const busqueda = (document.getElementById("searchInput").value || document.getElementById("mobileSearchInput").value || "").toLowerCase();
 
+      // --- RECALCULO EN TIEMPO REAL DE CONTADORES POR ÁREA ---
+      let electricos = 0;
+      let herrajes = 0;
+      let motos = 0;
+      let abarrotes = 0;
+
+      todosLosProductos.forEach(p => {
+        const areaStr = (p.area || '').toLowerCase();
+        const catStr = (p.categoriaNombre || '').toLowerCase();
+
+        if (areaStr.includes('eléctric') || areaStr.includes('electric') || catStr.includes('foco') || catStr.includes('cable') || catStr.includes('contacto')) {
+          electricos++;
+        } else if (areaStr.includes('moto') || catStr.includes('moto') || catStr.includes('refacc')) {
+          motos++;
+        } else if (areaStr.includes('abarrot') || catStr.includes('abarrot') || catStr.includes('despensa') || catStr.includes('limpieza')) {
+          abarrotes++;
+        } else {
+          // Todo lo demás se contabiliza en Herrajes
+          herrajes++;
+        }
+      });
+
+      // Actualización directa de los badges en la interfaz
+      const elElec = document.getElementById("countElectricos");
+      const elHerr = document.getElementById("countHerrajes");
+      const elMoto = document.getElementById("countMotos");
+      const elAbar = document.getElementById("countAbarrotes");
+
+      if (elElec) elElec.innerText = `${electricos} arts`;
+      if (elHerr) elHerr.innerText = `${herrajes} arts`;
+      if (elMoto) elMoto.innerText = `${motos} arts`;
+      if (elAbar) elAbar.innerText = `${abarrotes} arts`;
+
+      // --- FILTRADO PARA MOSTRAR EN LA REJILLA ---
       let filtrados = todosLosProductos.filter(p => {
         const coincideArea = areaActual === "Todas" || p.area === areaActual;
         const coincideBusqueda = p.name.toLowerCase().includes(busqueda) || 
