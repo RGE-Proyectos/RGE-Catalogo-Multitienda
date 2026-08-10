@@ -102,25 +102,40 @@
   <!-- CONTENIDO PRINCIPAL -->
   <main class="max-w-7xl mx-auto px-4 mt-6">
     
-    <!-- TARJETAS DESTACADAS DE ÁREAS (SECCIÓN INICIAL) -->
+    <!-- TARJETAS DESTACADAS DE ÁREAS (SECCIÓN INICIAL CON CONTADORES DINÁMICOS) -->
     <div id="gridAreas" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
       <div onclick="seleccionarArea('Artículos Eléctricos')" class="cursor-pointer p-4 bg-gradient-to-br from-amber-900/30 to-slate-800 border border-amber-500/20 rounded-2xl hover:border-amber-500/50 transition">
-        <i data-lucide="zap" class="w-8 h-8 text-amber-400 mb-2"></i>
+        <div class="flex justify-between items-start mb-2">
+          <i data-lucide="zap" class="w-8 h-8 text-amber-400"></i>
+          <span id="countElectricos" class="text-xs font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full">0 arts</span>
+        </div>
         <h3 class="font-bold text-slate-100">Artículos Eléctricos</h3>
         <p class="text-xs text-slate-400">Focos, cables, contactos</p>
       </div>
+
       <div onclick="seleccionarArea('Herrajes')" class="cursor-pointer p-4 bg-gradient-to-br from-blue-900/30 to-slate-800 border border-blue-500/20 rounded-2xl hover:border-blue-500/50 transition">
-        <i data-lucide="wrench" class="w-8 h-8 text-blue-400 mb-2"></i>
+        <div class="flex justify-between items-start mb-2">
+          <i data-lucide="wrench" class="w-8 h-8 text-blue-400"></i>
+          <span id="countHerrajes" class="text-xs font-bold bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full">0 arts</span>
+        </div>
         <h3 class="font-bold text-slate-100">Herrajes</h3>
         <p class="text-xs text-slate-400">Bisagras, carretillas, chapas</p>
       </div>
+
       <div onclick="seleccionarArea('Refacciones para Moto')" class="cursor-pointer p-4 bg-gradient-to-br from-red-900/30 to-slate-800 border border-red-500/20 rounded-2xl hover:border-red-500/50 transition">
-        <i data-lucide="bike" class="w-8 h-8 text-red-400 mb-2"></i>
+        <div class="flex justify-between items-start mb-2">
+          <i data-lucide="bike" class="w-8 h-8 text-red-400"></i>
+          <span id="countMotos" class="text-xs font-bold bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full">0 arts</span>
+        </div>
         <h3 class="font-bold text-slate-100">Refacciones Moto</h3>
         <p class="text-xs text-slate-400">Llantas, aceites, cascos</p>
       </div>
+
       <div onclick="seleccionarArea('Abarrotes Básicos')" class="cursor-pointer p-4 bg-gradient-to-br from-emerald-900/30 to-slate-800 border border-emerald-500/20 rounded-2xl hover:border-emerald-500/50 transition">
-        <i data-lucide="shopping-cart" class="w-8 h-8 text-emerald-400 mb-2"></i>
+        <div class="flex justify-between items-start mb-2">
+          <i data-lucide="shopping-cart" class="w-8 h-8 text-emerald-400"></i>
+          <span id="countAbarrotes" class="text-xs font-bold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">0 arts</span>
+        </div>
         <h3 class="font-bold text-slate-100">Abarrotes Básicos</h3>
         <p class="text-xs text-slate-400">Despensa y productos hogar</p>
       </div>
@@ -213,6 +228,22 @@
             area
           };
         });
+
+function actualizarContadores() {
+  const electricos = todosLosProductos.filter(p => p.area === "Artículos Eléctricos").length;
+  const herrajes = todosLosProductos.filter(p => p.area === "Herrajes").length;
+  const motos = todosLosProductos.filter(p => p.area === "Refacciones para Moto").length;
+  const abarrotes = todosLosProductos.filter(p => p.area === "Abarrotes Básicos").length;
+
+  document.getElementById("countElectricos").innerText = `${electricos} arts`;
+  document.getElementById("countHerrajes").innerText = `${herrajes} arts`;
+  document.getElementById("countMotos").innerText = `${motos} arts`;
+  document.getElementById("countAbarrotes").innerText = `${abarrotes} arts`;
+}
+
+
+
+
 
         renderizarProductos();
       } catch (e) {
