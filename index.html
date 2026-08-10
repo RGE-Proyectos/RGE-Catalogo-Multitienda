@@ -3,13 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Catálogo & Control de Inventario</title>
+  <title>RGE-Catálogo Multinegocio</title>
+  
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
   <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- FontAwesome / Lucide Icons -->
+  
+  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -28,136 +32,137 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-12 transition-colors duration-200">
 
-  <!-- BARRA DE NAVEGACIÓN Y BUSCADOR (FIXED TOP) -->
-  <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 p-3 shadow-lg">
-    <div class="max-w-4xl mx-auto flex flex-col gap-3">
+  <!-- HEADER / BARRA SUPERIOR -->
+  <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
       
-      <!-- Fila Superior: Título, Modo, Clave Propietario -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <i data-lucide="store" class="text-blue-500 w-6 h-6"></i>
-          <h1 class="font-bold text-lg tracking-wide">RGE Control</h1>
+      <!-- LOGO Y TÍTULO -->
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl shadow-lg">
+          <i data-lucide="store" class="w-6 h-6 text-white"></i>
         </div>
-
-        <div class="flex items-center gap-2">
-          <!-- Modos de vista: Cliente / Propietario -->
-          <button id="btnRole" onclick="toggleRoleModal()" class="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 font-semibold text-slate-300 hover:border-blue-500 transition-all">
-            <span id="roleBadge">👁️ Vista: Cliente</span>
-          </button>
-
-          <!-- Toggle Dark / Light -->
-          <button onclick="toggleTheme()" class="p-2 bg-slate-800 rounded-full border border-slate-700 text-slate-300 hover:text-white">
-            <i data-lucide="sun-moon" class="w-4 h-4"></i>
-          </button>
+        <div>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+            RGE-Catálogo Multinegocio
+          </h1>
+          <p class="text-xs text-slate-400">Selección por Área de Negocio</p>
         </div>
       </div>
 
-      <!-- Buscador Principal -->
-      <div class="relative">
-        <i data-lucide="search" class="absolute left-3.5 top-3 w-5 h-5 text-slate-400"></i>
+      <!-- BUSCADOR DESK/MÓVIL -->
+      <div class="relative flex-1 max-w-md hidden md:block">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input 
           type="text" 
-          id="searchInput" 
-          oninput="filtrarProductos()"
-          placeholder="Escribe el nombre o SKU del producto..." 
-          class="w-full bg-slate-800 border border-slate-700 rounded-xl pl-11 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-100 placeholder-slate-400 shadow-inner"
+          id="searchInput"
+          onkeyup="filtrarProductos()"
+          placeholder="Buscar por producto, SKU o categoría..." 
+          class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <button id="btnClear" onclick="limpiarBusqueda()" class="hidden absolute right-3 top-2.5 text-slate-400 hover:text-white">
-          <i data-lucide="x-circle" class="w-5 h-5"></i>
-        </button>
       </div>
 
-      <!-- Barra de Filtro de Categorías -->
-      <div id="categoriesBar" class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
-        <button onclick="filtrarCategoria('')" class="cat-btn active bg-blue-600 text-white px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all">
-          Todos
+      <button onclick="toggleMobileSearch()" class="md:hidden p-2 text-slate-400 hover:text-white">
+        <i data-lucide="search" class="w-6 h-6"></i>
+      </button>
+    </div>
+
+    <!-- BUSCADOR DESPLEGABLE MÓVIL -->
+    <div id="mobileSearchContainer" class="hidden px-4 pb-3 md:hidden">
+      <input 
+        type="text" 
+        id="mobileSearchInput"
+        onkeyup="filtrarProductosMobile()"
+        placeholder="Buscar producto o SKU..." 
+        class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+
+    <!-- PESTAÑAS DE ÁREAS (SCROLL HORIZONTAL EN MÓVIL) -->
+    <div class="border-t border-slate-800/80 bg-slate-900/50">
+      <div class="max-w-7xl mx-auto px-4 flex gap-2 overflow-x-auto py-2 no-scrollbar">
+        <button onclick="seleccionarArea('Todas')" class="tab-btn active px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 bg-blue-600 text-white">
+          <i data-lucide="layout-grid" class="w-4 h-4"></i> Todas
+        </button>
+        <button onclick="seleccionarArea('Artículos Eléctricos')" class="tab-btn px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 bg-slate-800 text-slate-400 hover:text-white">
+          <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> Artículos Eléctricos
+        </button>
+        <button onclick="seleccionarArea('Herrajes')" class="tab-btn px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 bg-slate-800 text-slate-400 hover:text-white">
+          <i data-lucide="wrench" class="w-4 h-4 text-blue-400"></i> Herrajes
+        </button>
+        <button onclick="seleccionarArea('Refacciones para Moto')" class="tab-btn px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 bg-slate-800 text-slate-400 hover:text-white">
+          <i data-lucide="bike" class="w-4 h-4 text-red-400"></i> Refacciones para Moto
+        </button>
+        <button onclick="seleccionarArea('Abarrotes Básicos')" class="tab-btn px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 bg-slate-800 text-slate-400 hover:text-white">
+          <i data-lucide="shopping-cart" class="w-4 h-4 text-emerald-400"></i> Abarrotes Básicos
         </button>
       </div>
-
     </div>
   </header>
 
-  <!-- CONTENEDOR DE TARJETAS (GRID) -->
-  <main class="max-w-4xl mx-auto p-3 mt-2">
-    <!-- Estado de Carga / Sin Resultados -->
-    <div id="loading" class="text-center py-12 text-slate-400">
-      <i data-lucide="loader-2" class="w-8 h-8 animate-spin mx-auto text-blue-500 mb-2"></i>
-      <p class="text-sm">Cargando inventario desde Supabase...</p>
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="max-w-7xl mx-auto px-4 mt-6">
+    
+    <!-- TARJETAS DESTACADAS DE ÁREAS (SECCIÓN INICIAL) -->
+    <div id="gridAreas" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div onclick="seleccionarArea('Artículos Eléctricos')" class="cursor-pointer p-4 bg-gradient-to-br from-amber-900/30 to-slate-800 border border-amber-500/20 rounded-2xl hover:border-amber-500/50 transition">
+        <i data-lucide="zap" class="w-8 h-8 text-amber-400 mb-2"></i>
+        <h3 class="font-bold text-slate-100">Artículos Eléctricos</h3>
+        <p class="text-xs text-slate-400">Focos, cables, contactos</p>
+      </div>
+      <div onclick="seleccionarArea('Herrajes')" class="cursor-pointer p-4 bg-gradient-to-br from-blue-900/30 to-slate-800 border border-blue-500/20 rounded-2xl hover:border-blue-500/50 transition">
+        <i data-lucide="wrench" class="w-8 h-8 text-blue-400 mb-2"></i>
+        <h3 class="font-bold text-slate-100">Herrajes</h3>
+        <p class="text-xs text-slate-400">Bisagras, carretillas, chapas</p>
+      </div>
+      <div onclick="seleccionarArea('Refacciones para Moto')" class="cursor-pointer p-4 bg-gradient-to-br from-red-900/30 to-slate-800 border border-red-500/20 rounded-2xl hover:border-red-500/50 transition">
+        <i data-lucide="bike" class="w-8 h-8 text-red-400 mb-2"></i>
+        <h3 class="font-bold text-slate-100">Refacciones Moto</h3>
+        <p class="text-xs text-slate-400">Llantas, aceites, cascos</p>
+      </div>
+      <div onclick="seleccionarArea('Abarrotes Básicos')" class="cursor-pointer p-4 bg-gradient-to-br from-emerald-900/30 to-slate-800 border border-emerald-500/20 rounded-2xl hover:border-emerald-500/50 transition">
+        <i data-lucide="shopping-cart" class="w-8 h-8 text-emerald-400 mb-2"></i>
+        <h3 class="font-bold text-slate-100">Abarrotes Básicos</h3>
+        <p class="text-xs text-slate-400">Despensa y productos hogar</p>
+      </div>
     </div>
 
-    <div id="gridProductos" class="grid grid-cols-1 sm:grid-cols-2 gap-3 hidden">
-      <!-- Las tarjetas se generan dinámicamente -->
+    <!-- INDICADOR DE ÁREA SELECCIONADA -->
+    <div class="flex items-center justify-between mb-4">
+      <h2 id="areaTitle" class="text-lg font-bold text-slate-200">Todos los Productos</h2>
+      <span id="productCounter" class="text-xs text-slate-400">Cargando productos...</span>
+    </div>
+
+    <!-- REJILLA DE PRODUCTOS RESPONSIVA -->
+    <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <!-- Los productos se cargan dinámicamente desde Supabase -->
     </div>
   </main>
 
-  <!-- MODAL CLAVE PROPIETARIO -->
-  <div id="pinModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full max-w-xs text-center shadow-2xl">
-      <div class="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
-        <i data-lucide="lock" class="w-6 h-6"></i>
-      </div>
-      <h3 class="font-bold text-lg mb-1">Acceso Propietario</h3>
-      <p class="text-xs text-slate-400 mb-4">Ingresa tu clave de seguridad para desbloquear los datos sensibles.</p>
-      
-      <input 
-        type="password" 
-        id="pinInput" 
-        maxlength="4"
-        placeholder="••••" 
-        class="w-full text-center text-2xl tracking-widest bg-slate-900 border border-slate-700 rounded-xl py-2 mb-4 focus:ring-2 focus:ring-blue-500 outline-none"
-      />
-      
-      <div class="flex gap-2">
-        <button onclick="cerrarPinModal()" class="flex-1 py-2 text-xs bg-slate-700 hover:bg-slate-600 rounded-xl font-medium">Cancelar</button>
-        <button onclick="validarPIN()" class="flex-1 py-2 text-xs bg-blue-600 hover:bg-blue-500 rounded-xl font-medium text-white">Ingresar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DETALLE DE PRODUCTO -->
-  <div id="detailModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden p-0 sm:p-4">
-    <div class="bg-slate-800 border border-slate-700 rounded-t-3xl sm:rounded-2xl p-5 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl relative">
-      <button onclick="cerrarDetalle()" class="absolute right-4 top-4 p-2 text-slate-400 hover:text-white bg-slate-700/50 rounded-full">
-        <i data-lucide="x" class="w-5 h-5"></i>
+  <!-- MODAL DE FICHA TÉCNICA Y MARGEN -->
+  <div id="productModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
+      <button onclick="cerrarModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+        <i data-lucide="x" class="w-6 h-6"></i>
       </button>
 
       <div id="modalContent">
-        <!-- Contenido inyectado dinámicamente -->
+        <!-- Contenido dinámico del producto -->
       </div>
     </div>
   </div>
 
-  <!-- JAVASCRIPT DE INTEGRACIÓN -->
+  <!-- LÓGICA DE JAVASCRIPT CON SUPABASE -->
   <script>
-    // -------------------------------------------------------------
-    // CONFIGURACIÓN DE SUPABASE Y CONSTANTES
-    // -------------------------------------------------------------
     const SUPABASE_URL = "https://zvtirryhqxxldceumfjs.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D6OqQEeNZWqXIE9I0qfz_A_9ilgTB4t";
-    const PIN_CORRECTO = "7200";
-
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let todosLosProductos = [];
-    let categorias = [];
-    let categoriaActiva = "";
-    let esPropietario = false;
+    let areaActual = "Todas";
 
-    // -------------------------------------------------------------
-    // INICIALIZACIÓN
-    // -------------------------------------------------------------
-    document.addEventListener("DOMContentLoaded", () => {
-      lucide.createIcons();
-      cargarInventario();
-    });
-
-    // -------------------------------------------------------------
-    // CONSULTA A SUPABASE (PETICIONES PARALELAS ROBUSTAS)
-    // -------------------------------------------------------------
-    async function cargarInventario() {
+    async function cargarCatalogo() {
       try {
-        // 1. Petición de Productos y Categorías
-        const pReq = supabaseClient
+        const { data: products, error } = await _supabase
           .from('products')
           .select(`
             id,
@@ -165,322 +170,153 @@
             name,
             description,
             attributes,
-            category_id,
-            categories ( id, name )
+            categories ( name ),
+            product_prices ( sale_price, cost_price ),
+            inventory_stocks ( stock_qty )
           `);
 
-        // 2. Petición Directa de Precios
-        const prReq = supabaseClient
-          .from('product_prices')
-          .select('product_id, sale_price, cost_price');
+        if (error) throw error;
 
-        // 3. Petición Directa de Stocks
-        const stReq = supabaseClient
-          .from('inventory_stocks')
-          .select('product_id, stock_qty');
-
-        // Ejecutar las 3 peticiones en paralelo
-        const [resP, resPr, resSt] = await Promise.all([pReq, prReq, stReq]);
-
-        if (resP.error) throw resP.error;
-        if (resPr.error) console.warn("Aviso Precios:", resPr.error);
-        if (resSt.error) console.warn("Aviso Stocks:", resSt.error);
-
-        // Crear Mapas de Búsqueda Rápida por product_id
-        const pricesMap = {};
-        if (resPr.data) {
-          resPr.data.forEach(item => {
-            pricesMap[item.product_id] = item;
-          });
-        }
-
-        const stocksMap = {};
-        if (resSt.data) {
-          resSt.data.forEach(item => {
-            stocksMap[item.product_id] = item.stock_qty;
-          });
-        }
-
-        // Mapear productos e integrar los precios y existencias
-        todosLosProductos = resP.data.map(p => {
-          const priceObj = pricesMap[p.id] || {};
-          const precio = priceObj.sale_price !== undefined ? priceObj.sale_price : 0;
-          const costo = priceObj.cost_price !== undefined ? priceObj.cost_price : 0;
-          
-          const stock = stocksMap[p.id] !== undefined ? stocksMap[p.id] : 0;
-          
-          const imagen = (p.attributes && p.attributes.imagen_url) ? p.attributes.imagen_url : '';
-          
-          let categoria = 'General';
-          if (p.categories) {
-            categoria = Array.isArray(p.categories) 
-              ? (p.categories[0] ? p.categories[0].name : 'General')
-              : (p.categories.name || 'General');
-          }
+        todosLosProductos = products.map(p => {
+          const precio = p.product_prices?.[0]?.sale_price || 0;
+          const costo = p.product_prices?.[0]?.cost_price || 0;
+          const stock = p.inventory_stocks?.[0]?.stock_qty || 0;
+          const categoriaNombre = p.categories?.name || "General";
+          const area = p.attributes?.area_negocio || inferirArea(categoriaNombre);
 
           return {
-            id: p.id,
-            sku: p.sku || '',
-            nombre: p.name || '',
-            descripcion: p.description || p.name || '',
-            categoria: categoria,
-            precio: parseFloat(precio || 0),
-            costo: parseFloat(costo || 0),
-            stock: parseInt(stock || 0),
-            imagen: imagen,
-            atributos: p.attributes || {}
+            ...p,
+            precio,
+            costo,
+            stock,
+            categoriaNombre,
+            area
           };
         });
 
-        extraerCategorias();
-        renderizarProductos(todosLosProductos);
-
-        document.getElementById("loading").classList.add("hidden");
-        document.getElementById("gridProductos").classList.remove("hidden");
-
-      } catch (err) {
-        console.error("Error al cargar productos:", err);
-        document.getElementById("loading").innerHTML = `
-          <div class="text-red-400 p-4 bg-red-950/30 rounded-xl border border-red-800">
-            ❌ Error conectando a Supabase. Revisa la consola (F12) para más detalles.
-          </div>
-        `;
+        renderizarProductos();
+      } catch (e) {
+        console.error("Error al cargar productos de Supabase:", e);
       }
     }
 
-    // -------------------------------------------------------------
-    // BARRA DE CATEGORÍAS
-    // -------------------------------------------------------------
-    function extraerCategorias() {
-      const catSet = new Set(todosLosProductos.map(p => p.categoria));
-      categorias = Array.from(catSet);
-
-      const bar = document.getElementById("categoriesBar");
-      bar.innerHTML = `
-        <button onclick="filtrarCategoria('')" class="cat-btn active bg-blue-600 text-white px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all">
-          Todos (${todosLosProductos.length})
-        </button>
-      `;
-
-      categorias.forEach(cat => {
-        const count = todosLosProductos.filter(p => p.categoria === cat).length;
-        bar.innerHTML += `
-          <button onclick="filtrarCategoria('${cat}')" class="cat-btn bg-slate-800 text-slate-300 border border-slate-700 hover:border-blue-500 px-3 py-1.5 rounded-lg whitespace-nowrap font-medium transition-all">
-            ${cat} (${count})
-          </button>
-        `;
-      });
+    function inferirArea(cat) {
+      cat = cat.toLowerCase();
+      if (cat.includes("foco") || cat.includes("electr")) return "Artículos Eléctricos";
+      if (cat.includes("bisagra") || cat.includes("carretilla") || cat.includes("chapa")) return "Herrajes";
+      if (cat.includes("moto") || cat.includes("refacc")) return "Refacciones para Moto";
+      if (cat.includes("abarrot") || cat.includes("despensa")) return "Abarrotes Básicos";
+      return "Herrajes";
     }
 
-    function filtrarCategoria(cat) {
-      categoriaActiva = cat;
-      document.querySelectorAll(".cat-btn").forEach(btn => {
-        btn.classList.remove("bg-blue-600", "text-white");
-        btn.classList.add("bg-slate-800", "text-slate-300");
+    function renderizarProductos() {
+      const grid = document.getElementById("productsGrid");
+      const busqueda = (document.getElementById("searchInput").value || document.getElementById("mobileSearchInput").value || "").toLowerCase();
+
+      let filtrados = todosLosProductos.filter(p => {
+        const coincideArea = areaActual === "Todas" || p.area === areaActual;
+        const coincideBusqueda = p.name.toLowerCase().includes(busqueda) || 
+                                 p.sku.toLowerCase().includes(busqueda) || 
+                                 p.categoriaNombre.toLowerCase().includes(busqueda);
+        return coincideArea && coincideBusqueda;
       });
-      event.target.classList.add("bg-blue-600", "text-white");
-      filtrarProductos();
-    }
 
-    // -------------------------------------------------------------
-    // RENDERIZADO DE PRODUCTOS EN RETÍCULA
-    // -------------------------------------------------------------
-    function renderizarProductos(lista) {
-      const grid = document.getElementById("gridProductos");
-      grid.innerHTML = "";
+      document.getElementById("productCounter").innerText = `${filtrados.length} productos`;
 
-      if (lista.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full text-center py-12 text-slate-400">
-            <p class="text-sm">No se encontraron productos coincidentes.</p>
-          </div>
-        `;
+      if (filtrados.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">No se encontraron productos en esta sección.</div>`;
         return;
       }
 
-      lista.forEach(p => {
-        // Indicador de Stock
-        let badgeStock = `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[11px] font-semibold px-2 py-0.5 rounded-full">Disponibles: ${p.stock}</span>`;
-        if (p.stock === 0) {
-          badgeStock = `<span class="bg-red-500/10 text-red-400 border border-red-500/20 text-[11px] font-semibold px-2 py-0.5 rounded-full">Agotado</span>`;
-        } else if (p.stock <= 3) {
-          badgeStock = `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[11px] font-semibold px-2 py-0.5 rounded-full">Bajo stock: ${p.stock}</span>`;
-        }
-
-        const imagenHtml = p.imagen 
-          ? `<img src="${p.imagen}" alt="${p.nombre}" class="w-full h-36 object-contain p-2 rounded-xl bg-slate-950/40" />`
-          : `<div class="w-full h-36 bg-slate-950/40 rounded-xl flex items-center justify-center text-slate-600"><i data-lucide="package" class="w-10 h-10"></i></div>`;
-
-        // Datos extendidos solo para Propietario
-        const bloquePropietario = esPropietario ? `
-          <div class="mt-3 pt-2 border-t border-slate-700/60 text-[11px] grid grid-cols-2 gap-1 text-slate-400">
-            <div>Coste: <b class="text-slate-200">$${p.costo.toFixed(2)}</b></div>
-            <div>Margen: <b class="text-emerald-400">${p.costo > 0 ? Math.round(((p.precio - p.costo)/p.costo)*100) : 0}%</b></div>
+      grid.innerHTML = filtrados.map(p => `
+        <div onclick="verFichaTecnica('${p.id}')" class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between hover:border-blue-500/50 transition cursor-pointer">
+          <div>
+            <div class="h-48 bg-slate-900 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-2">
+              <img src="${p.attributes?.imagen_url || 'https://via.placeholder.com/200'}" class="max-h-full max-w-full object-contain" alt="${p.name}" />
+            </div>
+            <span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md">${p.categoriaNombre}</span>
+            <span class="text-xs text-slate-400 float-right font-mono">${p.sku}</span>
+            <h3 class="font-bold text-slate-100 text-sm mt-2 line-clamp-2">${p.name}</h3>
           </div>
-        ` : '';
-
-        const card = `
-          <div onclick="abrirDetalle('${p.id}')" class="bg-slate-800/80 border border-slate-700/80 hover:border-blue-500/60 rounded-2xl p-3 flex flex-col justify-between cursor-pointer transition-all duration-200 shadow-md">
+          <div class="mt-4 pt-3 border-t border-slate-700/50 flex items-center justify-between">
             <div>
-              <!-- 1. IMAGEN DEL PRODUCTO -->
-              <div class="relative">
-                ${imagenHtml}
-                <span class="absolute top-2 right-2 text-[10px] bg-slate-900/80 backdrop-blur-md px-2 py-0.5 rounded-md text-slate-300 font-mono border border-slate-700">${p.sku}</span>
-              </div>
-
-              <!-- NOMBRE Y DESCRIPCIÓN -->
-              <h2 class="font-bold text-sm mt-2 text-slate-100 line-clamp-1">${p.nombre}</h2>
-              <p class="text-xs text-slate-400 line-clamp-2 mt-0.5 leading-snug">${p.descripcion}</p>
+              <p class="text-xs text-slate-400">PRECIO</p>
+              <p class="text-lg font-bold text-emerald-400">$${p.precio.toFixed(2)}</p>
             </div>
-
-            <!-- 2. PRECIO REALZADO + 3. STOCK PEQUEÑO -->
-            <div class="mt-3 pt-2 border-t border-slate-700/50 flex items-end justify-between">
-              <div>
-                <span class="text-[10px] text-slate-400 uppercase tracking-wider block">Precio</span>
-                <span class="text-xl font-black text-emerald-400 tracking-tight">$${p.precio.toFixed(2)}</span>
-              </div>
-              <div>
-                ${badgeStock}
-              </div>
+            <div class="text-right">
+              <span class="text-xs px-2 py-1 rounded-full ${p.stock > 3 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}">
+                Disponibles: ${p.stock}
+              </span>
             </div>
-
-            ${bloquePropietario}
           </div>
-        `;
-        grid.innerHTML += card;
-      });
+        </div>
+      `).join('');
 
       lucide.createIcons();
     }
 
-    // -------------------------------------------------------------
-    // BÚSQUEDA Y FILTRADO
-    // -------------------------------------------------------------
-    function filtrarProductos() {
-      const q = document.getElementById("searchInput").value.toLowerCase().trim();
-      document.getElementById("btnClear").classList.toggle("hidden", q === "");
-
-      const filtrados = todosLosProductos.filter(p => {
-        const coincideCat = categoriaActiva === "" || p.categoria === categoriaActiva;
-        const coincideTexto = p.nombre.toLowerCase().includes(q) || 
-                              p.sku.toLowerCase().includes(q) ||
-                              p.descripcion.toLowerCase().includes(q);
-        return coincideCat && coincideTexto;
-      });
-
-      renderizarProductos(filtrados);
+    function seleccionarArea(area) {
+      areaActual = area;
+      document.getElementById("areaTitle").innerText = area === "Todas" ? "Todos los Productos" : area;
+      renderizarProductos();
     }
 
-    function limpiarBusqueda() {
-      document.getElementById("searchInput").value = "";
-      filtrarProductos();
-    }
-
-    // -------------------------------------------------------------
-    // MODAL DE DETALLE Y COMPARTIR WHATSAPP
-    // -------------------------------------------------------------
-    function abrirDetalle(id) {
+    function verFichaTecnica(id) {
       const p = todosLosProductos.find(item => item.id === id);
       if (!p) return;
 
-      const imagenHtml = p.imagen 
-        ? `<img src="${p.imagen}" class="w-full h-48 object-contain p-2 rounded-xl bg-slate-950/50 mb-3" />`
-        : `<div class="w-full h-32 bg-slate-950/50 rounded-xl flex items-center justify-center text-slate-600 mb-3"><i data-lucide="package" class="w-12 h-12"></i></div>`;
+      const margen = p.precio > 0 ? (((p.precio - p.costo) / p.precio) * 100).toFixed(1) : 0;
 
-      // Texto preformateado para WhatsApp
-      const mensajeWA = encodeURIComponent(`¡Hola! Me interesa información sobre el producto:\n\n📌 *${p.nombre}*\n🏷️ SKU: ${p.sku}\n💰 Precio: $${p.precio.toFixed(2)}\n\n¿Tienen disponibilidad para entrega?`);
-
-      const contenido = `
-        ${imagenHtml}
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-xs bg-blue-500/10 text-blue-400 font-semibold px-2 py-0.5 rounded-md border border-blue-500/20">${p.categoria}</span>
-          <span class="text-xs font-mono text-slate-400">SKU: ${p.sku}</span>
+      document.getElementById("modalContent").innerHTML = `
+        <div class="text-center mb-4">
+          <img src="${p.attributes?.imagen_url || 'https://via.placeholder.com/200'}" class="h-48 mx-auto object-contain rounded-lg mb-2" />
+          <span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md">${p.categoriaNombre}</span>
+          <h2 class="text-lg font-bold text-slate-100 mt-2">${p.name}</h2>
+          <p class="text-xs text-slate-400 font-mono">SKU: ${p.sku}</p>
         </div>
-        <h2 class="text-lg font-bold text-slate-100 mb-1">${p.nombre}</h2>
-        <p class="text-xs text-slate-300 leading-relaxed mb-4">${p.descripcion}</p>
-
-        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/80 mb-4 flex items-center justify-between">
+        <p class="text-xs text-slate-300 mb-4 bg-slate-800 p-3 rounded-lg">${p.description}</p>
+        
+        <div class="grid grid-cols-2 gap-3 mb-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
           <div>
-            <span class="text-[10px] text-slate-400 uppercase block">Precio de Venta</span>
-            <span class="text-2xl font-black text-emerald-400">$${p.precio.toFixed(2)}</span>
+            <p class="text-xs text-slate-400">PRECIO VENTA</p>
+            <p class="text-xl font-bold text-emerald-400">$${p.precio.toFixed(2)}</p>
           </div>
-          <div class="text-right">
-            <span class="text-[10px] text-slate-400 uppercase block">Existencias</span>
-            <span class="text-sm font-bold text-slate-200">${p.stock} unidades</span>
+          <div>
+            <p class="text-xs text-slate-400">EXISTENCIAS</p>
+            <p class="text-xl font-bold text-slate-200">${p.stock} unidades</p>
           </div>
         </div>
 
-        ${esPropietario ? `
-          <div class="bg-blue-950/30 p-3 rounded-xl border border-blue-800/40 text-xs mb-4 space-y-1">
-            <div class="font-bold text-blue-400 mb-1">🔒 Ficha Técnica de Propietario</div>
-            <div class="flex justify-between"><span>Costo Directo:</span> <b>$${p.costo.toFixed(2)}</b></div>
-            <div class="flex justify-between"><span>Margen Bruto:</span> <b>$${(p.precio - p.costo).toFixed(2)}</b></div>
-            <div class="flex justify-between"><span>Categoría ID:</span> <b class="font-mono">${p.categoria}</b></div>
-          </div>
-        ` : ''}
+        <div class="bg-slate-800 p-3 rounded-xl border border-slate-700/80 mb-4 text-xs space-y-1">
+          <p class="font-bold text-amber-400 flex items-center gap-1">🔒 Ficha Técnica de Propietario</p>
+          <div class="flex justify-between text-slate-300"><span>Costo Directo:</span><span class="font-mono">$${p.costo.toFixed(2)}</span></div>
+          <div class="flex justify-between text-slate-300"><span>Margen Bruto:</span><span class="font-mono">${margen}%</span></div>
+        </div>
 
-        <a href="https://wa.me/?text=${mensajeWA}" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm shadow-lg transition-all">
-          <i data-lucide="message-square" class="w-4 h-4"></i>
-          Enviar Ficha por WhatsApp
+        <a href="https://wa.me/?text=Hola,%20me%20interesa%20el%20producto%20${encodeURIComponent(p.name)}%20(SKU:%20${p.sku})" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition">
+          <i data-lucide="message-square" class="w-5 h-5"></i> Enviar Ficha por WhatsApp
         </a>
       `;
 
-      document.getElementById("modalContent").innerHTML = contenido;
-      document.getElementById("detailModal").classList.remove("hidden");
+      document.getElementById("productModal").classList.remove("hidden");
       lucide.createIcons();
     }
 
-    function cerrarDetalle() {
-      document.getElementById("detailModal").classList.add("hidden");
+    function cerrarModal() {
+      document.getElementById("productModal").classList.add("hidden");
     }
 
-    // -------------------------------------------------------------
-    // MODO PROPIETARIO & SEGURIDAD PIN
-    // -------------------------------------------------------------
-    function toggleRoleModal() {
-      if (esPropietario) {
-        esPropietario = false;
-        document.getElementById("roleBadge").innerText = "👁️ Vista: Cliente";
-        filtrarProductos();
-      } else {
-        document.getElementById("pinInput").value = "";
-        document.getElementById("pinModal").classList.remove("hidden");
-        document.getElementById("pinInput").focus();
-      }
+    function toggleMobileSearch() {
+      document.getElementById("mobileSearchContainer").classList.toggle("hidden");
     }
 
-    function cerrarPinModal() {
-      document.getElementById("pinModal").classList.add("hidden");
-    }
+    function filtrarProductos() { renderizarProductos(); }
+    function filtrarProductosMobile() { renderizarProductos(); }
 
-    function validarPIN() {
-      const input = document.getElementById("pinInput").value;
-      if (input === PIN_CORRECTO) {
-        esPropietario = true;
-        document.getElementById("roleBadge").innerText = "🔓 Vista: Propietario";
-        cerrarPinModal();
-        filtrarProductos();
-      } else {
-        alert("PIN Incorrecto");
-        document.getElementById("pinInput").value = "";
-      }
-    }
-
-    // -------------------------------------------------------------
-    // MODO OSCURO / CLARO
-    // -------------------------------------------------------------
-    function toggleTheme() {
-      const html = document.documentElement;
-      if (html.classList.contains("dark")) {
-        html.classList.remove("dark");
-        document.body.classList.replace("bg-slate-900", "bg-slate-100");
-        document.body.classList.replace("text-slate-100", "text-slate-900");
-      } else {
-        html.classList.add("dark");
-        document.body.classList.replace("bg-slate-100", "bg-slate-900");
-        document.body.classList.replace("text-slate-900", "text-slate-100");
-      }
-    }
+    window.onload = () => {
+      lucide.createIcons();
+      cargarCatalogo();
+    };
   </script>
 </body>
 </html>
