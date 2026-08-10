@@ -81,46 +81,12 @@
   <!-- CONTENIDO PRINCIPAL -->
   <main class="max-w-7xl mx-auto px-4 mt-6">
     
-    <!-- TARJETAS PRINCIPALES DE ÁREAS DE NEGOCIO -->
-    <div id="gridAreas" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div id="cardElectricos" onclick="seleccionarArea('Artículos Eléctricos')" class="cursor-pointer p-5 bg-gradient-to-br from-amber-900/30 to-slate-800 border border-amber-500/20 rounded-2xl hover:border-amber-500/50 transition">
-        <div class="flex justify-between items-start mb-3">
-          <i data-lucide="zap" class="w-8 h-8 text-amber-400"></i>
-          <span id="countElectricos" class="text-sm font-extrabold bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">0 arts</span>
-        </div>
-        <h3 class="font-bold text-slate-100 text-base">Artículos Eléctricos</h3>
-        <p class="text-xs text-slate-400">Focos, cables, contactos</p>
-      </div>
-
-      <div id="cardHerrajes" onclick="seleccionarArea('Herrajes')" class="cursor-pointer p-5 bg-gradient-to-br from-blue-900/30 to-slate-800 border border-blue-500/20 rounded-2xl hover:border-blue-500/50 transition">
-        <div class="flex justify-between items-start mb-3">
-          <i data-lucide="wrench" class="w-8 h-8 text-blue-400"></i>
-          <span id="countHerrajes" class="text-sm font-extrabold bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full border border-blue-500/30">0 arts</span>
-        </div>
-        <h3 class="font-bold text-slate-100 text-base">Herrajes</h3>
-        <p class="text-xs text-slate-400">Bisagras, carretillas, chapas</p>
-      </div>
-
-      <div id="cardMotos" onclick="seleccionarArea('Refacciones para Moto')" class="cursor-pointer p-5 bg-gradient-to-br from-red-900/30 to-slate-800 border border-red-500/20 rounded-2xl hover:border-red-500/50 transition">
-        <div class="flex justify-between items-start mb-3">
-          <i data-lucide="bike" class="w-8 h-8 text-red-400"></i>
-          <span id="countMotos" class="text-sm font-extrabold bg-red-500/20 text-red-300 px-3 py-1 rounded-full border border-red-500/30">0 arts</span>
-        </div>
-        <h3 class="font-bold text-slate-100 text-base">Refacciones Moto</h3>
-        <p class="text-xs text-slate-400">Llantas, aceites, cascos</p>
-      </div>
-
-      <div id="cardAbarrotes" onclick="seleccionarArea('Abarrotes Básicos')" class="cursor-pointer p-5 bg-gradient-to-br from-emerald-900/30 to-slate-800 border border-emerald-500/20 rounded-2xl hover:border-emerald-500/50 transition">
-        <div class="flex justify-between items-start mb-3">
-          <i data-lucide="shopping-cart" class="w-8 h-8 text-emerald-400"></i>
-          <span id="countAbarrotes" class="text-sm font-extrabold bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full border border-emerald-500/30">0 arts</span>
-        </div>
-        <h3 class="font-bold text-slate-100 text-base">Abarrotes Básicos</h3>
-        <p class="text-xs text-slate-400">Despensa y productos hogar</p>
-      </div>
+    <!-- CONTENEDOR DINÁMICO DE DIVISIONES/NEGOCIOS -->
+    <div id="gridAreas" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+      <!-- Se llenará automáticamente con las Divisiones de la Columna H -->
     </div>
 
-    <!-- NUEVA BARRA DINÁMICA DE SUBCATEGORÍAS -->
+    <!-- BARRA DINÁMICA DE SUBCATEGORÍAS -->
     <div id="subcategoriesContainer" class="mb-6 p-4 bg-slate-800/50 border border-slate-700/60 rounded-2xl">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
@@ -130,7 +96,7 @@
         <button onclick="seleccionarArea('Todas')" class="text-xs text-blue-400 hover:text-blue-300 underline">Ver Todo el Catálogo</button>
       </div>
       <div id="subcategoriesList" class="flex flex-wrap gap-2">
-        <span class="text-xs text-slate-500">Haz clic en un área de negocio arriba para ver sus categorías.</span>
+        <span class="text-xs text-slate-500">Haz clic en una división arriba para ver sus categorías.</span>
       </div>
     </div>
 
@@ -162,8 +128,7 @@
     const SUPABASE_KEY = "sb_publishable_D6OqQEeNZWqXIE9I0qfz_A_9ilgTB4t";
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // CONFIGURACIÓN DE SEGURIDAD
-    const CLAVE_ADMIN = "9514"; // 🔒 Cambia esta contraseña si lo deseas
+    const CLAVE_ADMIN = "7200";
     let modoAdminActivado = false;
 
     let todosLosProductos = [];
@@ -211,8 +176,10 @@
             }
           }
 
-          const categoriaNombre = p.categories?.name || p.attributes?.categoria_original || "General";
-          const area = p.attributes?.area_negocio || inferirArea(categoriaNombre);
+          const categoriaNombre = p.categories?.name || p.attributes?.categoria || "General";
+          
+          // 🎯 Lectura directa de la Columna H (Division)
+          const division = p.attributes?.Division || p.attributes?.division || p.division || "Herrajes";
 
           return {
             ...p,
@@ -220,10 +187,11 @@
             costo,
             stock,
             categoriaNombre,
-            area
+            area: division
           };
         });
 
+        renderizarTarjetasDivisiones();
         renderizarProductos();
         generarSubcategorias();
       } catch (e) {
@@ -231,13 +199,35 @@
       }
     }
 
-    function inferirArea(cat) {
-      cat = cat.toLowerCase();
-      if (cat.includes("foco") || cat.includes("electr") || cat.includes("cable")) return "Artículos Eléctricos";
-      if (cat.includes("bisagra") || cat.includes("carretilla") || cat.includes("chapa")) return "Herrajes";
-      if (cat.includes("moto") || cat.includes("refacc")) return "Refacciones para Moto";
-      if (cat.includes("abarrot") || cat.includes("despensa")) return "Abarrotes Básicos";
-      return "Herrajes";
+    // 🎨 Genera automáticamente las tarjetas superiores según las divisiones encontradas en la Columna H
+    function renderizarTarjetasDivisiones() {
+      const grid = document.getElementById("gridAreas");
+      
+      // Contar productos por división
+      const conteoDivisiones = {};
+      todosLosProductos.forEach(p => {
+        const div = p.area || "General";
+        conteoDivisiones[div] = (conteoDivisiones[div] || 0) + 1;
+      });
+
+      const divisionesUnicas = Object.keys(conteoDivisiones).sort();
+
+      grid.innerHTML = divisionesUnicas.map(div => {
+        const count = conteoDivisiones[div];
+        const isActive = areaActual === div;
+        
+        return `
+          <div onclick="seleccionarArea('${div}')" class="cursor-pointer p-4 bg-gradient-to-br from-slate-800 to-slate-900 border ${isActive ? 'border-blue-500 ring-2 ring-blue-500/30' : 'border-slate-700/80'} rounded-2xl hover:border-blue-500/50 transition">
+            <div class="flex justify-between items-start mb-2">
+              <i data-lucide="layers" class="w-6 h-6 text-blue-400"></i>
+              <span class="text-sm font-extrabold bg-blue-500/20 text-blue-300 px-3 py-0.5 rounded-full border border-blue-500/30">${count} arts</span>
+            </div>
+            <h3 class="font-bold text-slate-100 text-base line-clamp-1">${div}</h3>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
     }
 
     function seleccionarArea(area) {
@@ -245,6 +235,7 @@
       subcategoriaActual = "Todas";
       document.getElementById("areaTitle").innerText = area === "Todas" ? "Todos los Productos" : area;
       
+      renderizarTarjetasDivisiones();
       generarSubcategorias();
       renderizarProductos();
     }
@@ -257,34 +248,12 @@
     function generarSubcategorias() {
       const container = document.getElementById("subcategoriesList");
 
-      // 1. Filtrar los productos pertenecientes AL ÁREA SELECCIONADA usando la misma lógica de los contadores
-      const productosDelArea = todosLosProductos.filter(p => {
-        if (areaActual === "Todas") return true;
+      // 1. Productos estrictos de la división seleccionada
+      const productosDelArea = areaActual === "Todas" 
+        ? todosLosProductos 
+        : todosLosProductos.filter(p => p.area === areaActual);
 
-        const areaStr = (p.area || '').toLowerCase();
-        const catStr = (p.categoriaNombre || '').toLowerCase();
-
-        if (areaActual === "Artículos Eléctricos") {
-          return areaStr.includes('eléctric') || areaStr.includes('electric') || catStr.includes('foco') || catStr.includes('cable') || catStr.includes('electr');
-        }
-        if (areaActual === "Refacciones para Moto") {
-          return areaStr.includes('moto') || catStr.includes('moto') || catStr.includes('refacc');
-        }
-        if (areaActual === "Abarrotes Básicos") {
-          return areaStr.includes('abarrot') || catStr.includes('abarrot') || catStr.includes('despensa') || catStr.includes('limpieza');
-        }
-        if (areaActual === "Herrajes") {
-          // Herrajes excluye explícitamente las otras divisiones
-          const esElectrico = areaStr.includes('eléctric') || areaStr.includes('electric') || catStr.includes('foco') || catStr.includes('cable');
-          const esMoto = areaStr.includes('moto') || catStr.includes('moto') || catStr.includes('refacc');
-          const esAbarrotes = areaStr.includes('abarrot') || catStr.includes('abarrot') || catStr.includes('despensa');
-          
-          return !esElectrico && !esMoto && !esAbarrotes;
-        }
-        return true;
-      });
-
-      // 2. Extraer categorías únicas SOLAMENTE de esos productos filtrados
+      // 2. Extraer subcategorías únicas asociadas únicamente a esa división
       const categoriasUnicas = [...new Set(productosDelArea.map(p => p.categoriaNombre))].filter(Boolean).sort();
 
       if (categoriasUnicas.length === 0) {
@@ -311,93 +280,86 @@
       container.innerHTML = html;
     }
 
-function renderizarProductos() {
-  const grid = document.getElementById("productsGrid");
-  const busqueda = (document.getElementById("searchInput").value || document.getElementById("mobileSearchInput").value || "").toLowerCase();
+    function renderizarProductos() {
+      const grid = document.getElementById("productsGrid");
+      const busqueda = (document.getElementById("searchInput").value || document.getElementById("mobileSearchInput").value || "").toLowerCase();
 
-  let electricos = 0, herrajes = 0, motos = 0, abarrotes = 0;
+      let filtrados = todosLosProductos.filter(p => {
+        const coincideArea = areaActual === "Todas" || p.area === areaActual;
+        const coincideSubcat = subcategoriaActual === "Todas" || p.categoriaNombre === subcategoriaActual;
+        const coincideBusqueda = p.name.toLowerCase().includes(busqueda) || 
+                                 p.sku.toLowerCase().includes(busqueda) || 
+                                 p.categoriaNombre.toLowerCase().includes(busqueda);
+        return coincideArea && coincideSubcat && coincideBusqueda;
+      });
 
-  todosLosProductos.forEach(p => {
-    const areaStr = (p.area || '').toLowerCase();
-    const catStr = (p.categoriaNombre || '').toLowerCase();
+      document.getElementById("productCounter").innerText = `${filtrados.length} productos`;
 
-    if (areaStr.includes('eléctric') || areaStr.includes('electric') || catStr.includes('foco') || catStr.includes('cable')) electricos++;
-    else if (areaStr.includes('moto') || catStr.includes('moto') || catStr.includes('refacc')) motos++;
-    else if (areaStr.includes('abarrot') || catStr.includes('abarrot') || catStr.includes('despensa')) abarrotes++;
-    else herrajes++;
-  });
+      if (filtrados.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">No se encontraron productos en esta sección.</div>`;
+        return;
+      }
 
-  if (document.getElementById("countElectricos")) document.getElementById("countElectricos").innerText = `${electricos} arts`;
-  if (document.getElementById("countHerrajes")) document.getElementById("countHerrajes").innerText = `${herrajes} arts`;
-  if (document.getElementById("countMotos")) document.getElementById("countMotos").innerText = `${motos} arts`;
-  if (document.getElementById("countAbarrotes")) document.getElementById("countAbarrotes").innerText = `${abarrotes} arts`;
+      grid.innerHTML = filtrados.map(p => {
+        const esPrecioCero = p.precio <= 0;
 
-  let filtrados = todosLosProductos.filter(p => {
-    const coincideArea = areaActual === "Todas" || p.area === areaActual;
-    const coincideSubcat = subcategoriaActual === "Todas" || p.categoriaNombre === subcategoriaActual;
-    const coincideBusqueda = p.name.toLowerCase().includes(busqueda) || 
-                             p.sku.toLowerCase().includes(busqueda) || 
-                             p.categoriaNombre.toLowerCase().includes(busqueda);
-    return coincideArea && coincideSubcat && coincideBusqueda;
-  });
+        const htmlPrecio = esPrecioCero 
+          ? `<span class="text-sm font-bold text-amber-400">Precio por definir</span>`
+          : `<p class="text-lg font-bold text-emerald-400">$${p.precio.toFixed(2)}</p>`;
 
-  document.getElementById("productCounter").innerText = `${filtrados.length} productos`;
+        const badgeNuevo = esPrecioCero 
+          ? `<span class="text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md uppercase tracking-wider">¡Nuevo!</span>`
+          : `<span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md">${p.categoriaNombre}</span>`;
 
-  if (filtrados.length === 0) {
-    grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">No se encontraron productos en esta categoría.</div>`;
-    return;
-  }
-
-  grid.innerHTML = filtrados.map(p => {
-    // 🔍 1. EVALUACIÓN DE PRECIO CERO
-    const esPrecioCero = p.precio <= 0;
-
-    // Etiqueta de precio dinámico
-    const htmlPrecio = esPrecioCero 
-      ? `<span class="text-sm font-bold text-amber-400">Precio por definir</span>`
-      : `<p class="text-lg font-bold text-emerald-400">$${p.precio.toFixed(2)}</p>`;
-
-    // Badge superior "¡Nuevo!" para precios cero
-    const badgeNuevo = esPrecioCero 
-      ? `<span class="text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md uppercase tracking-wider">¡Nuevo!</span>`
-      : `<span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md">${p.categoriaNombre}</span>`;
-
-    return `
-      <div onclick="verFichaTecnica('${p.id}')" class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between hover:border-blue-500/50 transition cursor-pointer">
-        <div>
-          <div class="h-48 bg-slate-900 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-2">
-            <img src="${p.attributes?.imagen_url || 'https://via.placeholder.com/200'}" class="max-h-full max-w-full object-contain" alt="${p.name}" />
+        return `
+          <div onclick="verFichaTecnica('${p.id}')" class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between hover:border-blue-500/50 transition cursor-pointer">
+            <div>
+              <div class="h-48 bg-slate-900 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-2">
+                <img src="${p.attributes?.imagen_url || 'https://via.placeholder.com/200'}" class="max-h-full max-w-full object-contain" alt="${p.name}" />
+              </div>
+              <div class="flex items-center justify-between gap-1">
+                ${badgeNuevo}
+                <span class="text-xs text-slate-400 font-mono">${p.sku}</span>
+              </div>
+              <h3 class="font-bold text-slate-100 text-sm mt-2 line-clamp-2">${p.name}</h3>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-700/50 flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-400">PRECIO</p>
+                ${htmlPrecio}
+              </div>
+              <div class="text-right">
+                <span class="text-xs px-2 py-1 rounded-full ${p.stock > 3 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}">
+                  Disponibles: ${p.stock}
+                </span>
+              </div>
+            </div>
           </div>
-          <div class="flex items-center justify-between gap-1">
-            ${badgeNuevo}
-            <span class="text-xs text-slate-400 font-mono">${p.sku}</span>
-          </div>
-          <h3 class="font-bold text-slate-100 text-sm mt-2 line-clamp-2">${p.name}</h3>
-        </div>
-        <div class="mt-4 pt-3 border-t border-slate-700/50 flex items-center justify-between">
-          <div>
-            <p class="text-xs text-slate-400">PRECIO</p>
-            ${htmlPrecio}
-          </div>
-          <div class="text-right">
-            <span class="text-xs px-2 py-1 rounded-full ${p.stock > 3 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'}">
-              Disponibles: ${p.stock}
-            </span>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
+        `;
+      }).join('');
 
-  lucide.createIcons();
-}
+      lucide.createIcons();
+    }
 
     function verFichaTecnica(id) {
       productoSeleccionadoId = id;
       const p = todosLosProductos.find(item => item.id === id);
       if (!p) return;
 
+      const esPrecioCero = p.precio <= 0;
       const margen = p.precio > 0 ? (((p.precio - p.costo) / p.precio) * 100).toFixed(1) : 0;
+
+      let htmlPrecioModal = esPrecioCero
+        ? `<div><p class="text-xs text-slate-400">ESTADO</p><p class="text-lg font-bold text-amber-400">Precio por definir</p></div>`
+        : `<div><p class="text-xs text-slate-400">PRECIO VENTA</p><p class="text-xl font-bold text-emerald-400">$${p.precio.toFixed(2)}</p></div>`;
+
+      let htmlBotonWA = esPrecioCero
+        ? `<div class="w-full bg-amber-600/30 border border-amber-500/50 text-amber-200 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-center text-sm">
+             <i data-lucide="clock" class="w-5 h-5 text-amber-400"></i> Próximamente a la venta
+           </div>`
+        : `<a href="https://wa.me/?text=Hola,%20me%20interesa%20el%20producto%20${encodeURIComponent(p.name)}%20(SKU:%20${p.sku})" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition">
+             <i data-lucide="message-square" class="w-5 h-5"></i> Enviar Pedido por WhatsApp
+           </a>`;
 
       let htmlAdminSection = '';
 
@@ -425,17 +387,17 @@ function renderizarProductos() {
       document.getElementById("modalContent").innerHTML = `
         <div class="text-center mb-4">
           <img src="${p.attributes?.imagen_url || 'https://via.placeholder.com/200'}" class="h-48 mx-auto object-contain rounded-lg mb-2" />
-          <span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md">${p.categoriaNombre}</span>
+          <div class="flex items-center justify-center gap-2">
+            ${esPrecioCero ? '<span class="text-xs font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md">¡NUEVO ARTÍCULO!</span>' : ''}
+            <span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md">${p.categoriaNombre}</span>
+          </div>
           <h2 class="text-lg font-bold text-slate-100 mt-2">${p.name}</h2>
           <p class="text-xs text-slate-400 font-mono">SKU: ${p.sku}</p>
         </div>
         <p class="text-xs text-slate-300 mb-4 bg-slate-800 p-3 rounded-lg">${p.description}</p>
         
         <div class="grid grid-cols-2 gap-3 mb-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
-          <div>
-            <p class="text-xs text-slate-400">PRECIO VENTA</p>
-            <p class="text-xl font-bold text-emerald-400">$${p.precio.toFixed(2)}</p>
-          </div>
+          ${htmlPrecioModal}
           <div>
             <p class="text-xs text-slate-400">EXISTENCIAS</p>
             <p class="text-xl font-bold text-slate-200">${p.stock} unidades</p>
@@ -443,10 +405,7 @@ function renderizarProductos() {
         </div>
 
         ${htmlAdminSection}
-
-        <a href="https://wa.me/?text=Hola,%20me%20interesa%20el%20producto%20${encodeURIComponent(p.name)}%20(SKU:%20${p.sku})" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition">
-          <i data-lucide="message-square" class="w-5 h-5"></i> Enviar Pedido por WhatsApp
-        </a>
+        ${htmlBotonWA}
       `;
 
       document.getElementById("productModal").classList.remove("hidden");
