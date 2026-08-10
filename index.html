@@ -45,11 +45,11 @@
           <h1 class="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
             RGE-Catálogo Multinegocio
           </h1>
-          <p class="text-xs text-slate-400">Selección por Área de Negocio</p>
+          <p class="text-xs text-slate-400">Catálogo General y Subcategorías</p>
         </div>
       </div>
 
-      <!-- BUSCADOR DESK/MÓVIL -->
+      <!-- BUSCADOR DESK -->
       <div class="relative flex-1 max-w-md hidden md:block">
         <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
         <input 
@@ -66,7 +66,7 @@
       </button>
     </div>
 
-    <!-- BUSCADOR DESPLEGABLE MÓVIL -->
+    <!-- BUSCADOR MÓVIL -->
     <div id="mobileSearchContainer" class="hidden px-4 pb-3 md:hidden">
       <input 
         type="text" 
@@ -76,35 +76,14 @@
         class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
-
-    <!-- PESTAÑAS DE ÁREAS (SCROLL HORIZONTAL EN MÓVIL) -->
-    <div class="border-t border-slate-800/80 bg-slate-900/50">
-      <div class="max-w-7xl mx-auto px-4 flex gap-2 overflow-x-auto py-2 no-scrollbar">
-        <button onclick="seleccionarArea('Todas')" class="tab-btn active px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 bg-blue-600 text-white">
-          <i data-lucide="layout-grid" class="w-4 h-4"></i> Todas
-        </button>
-        <button onclick="seleccionarArea('Artículos Eléctricos')" class="tab-btn px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 bg-slate-800 text-slate-400 hover:text-white">
-          <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i> Artículos Eléctricos
-        </button>
-        <button onclick="seleccionarArea('Herrajes')" class="tab-btn px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 bg-slate-800 text-slate-400 hover:text-white">
-          <i data-lucide="wrench" class="w-4 h-4 text-blue-400"></i> Herrajes
-        </button>
-        <button onclick="seleccionarArea('Refacciones para Moto')" class="tab-btn px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 bg-slate-800 text-slate-400 hover:text-white">
-          <i data-lucide="bike" class="w-4 h-4 text-red-400"></i> Refacciones para Moto
-        </button>
-        <button onclick="seleccionarArea('Abarrotes Básicos')" class="tab-btn px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-2 bg-slate-800 text-slate-400 hover:text-white">
-          <i data-lucide="shopping-cart" class="w-4 h-4 text-emerald-400"></i> Abarrotes Básicos
-        </button>
-      </div>
-    </div>
   </header>
 
   <!-- CONTENIDO PRINCIPAL -->
   <main class="max-w-7xl mx-auto px-4 mt-6">
     
- <!-- TARJETAS DESTACADAS DE ÁREAS (CON CONTADORES MÁS GRANDES) -->
-    <div id="gridAreas" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      <div onclick="seleccionarArea('Artículos Eléctricos')" class="cursor-pointer p-5 bg-gradient-to-br from-amber-900/30 to-slate-800 border border-amber-500/20 rounded-2xl hover:border-amber-500/50 transition">
+    <!-- TARJETAS PRINCIPALES DE ÁREAS DE NEGOCIO -->
+    <div id="gridAreas" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div id="cardElectricos" onclick="seleccionarArea('Artículos Eléctricos')" class="cursor-pointer p-5 bg-gradient-to-br from-amber-900/30 to-slate-800 border border-amber-500/20 rounded-2xl hover:border-amber-500/50 transition">
         <div class="flex justify-between items-start mb-3">
           <i data-lucide="zap" class="w-8 h-8 text-amber-400"></i>
           <span id="countElectricos" class="text-sm font-extrabold bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full border border-amber-500/30">0 arts</span>
@@ -113,7 +92,7 @@
         <p class="text-xs text-slate-400">Focos, cables, contactos</p>
       </div>
 
-      <div onclick="seleccionarArea('Herrajes')" class="cursor-pointer p-5 bg-gradient-to-br from-blue-900/30 to-slate-800 border border-blue-500/20 rounded-2xl hover:border-blue-500/50 transition">
+      <div id="cardHerrajes" onclick="seleccionarArea('Herrajes')" class="cursor-pointer p-5 bg-gradient-to-br from-blue-900/30 to-slate-800 border border-blue-500/20 rounded-2xl hover:border-blue-500/50 transition">
         <div class="flex justify-between items-start mb-3">
           <i data-lucide="wrench" class="w-8 h-8 text-blue-400"></i>
           <span id="countHerrajes" class="text-sm font-extrabold bg-blue-500/20 text-blue-300 px-3 py-1 rounded-full border border-blue-500/30">0 arts</span>
@@ -122,7 +101,7 @@
         <p class="text-xs text-slate-400">Bisagras, carretillas, chapas</p>
       </div>
 
-      <div onclick="seleccionarArea('Refacciones para Moto')" class="cursor-pointer p-5 bg-gradient-to-br from-red-900/30 to-slate-800 border border-red-500/20 rounded-2xl hover:border-red-500/50 transition">
+      <div id="cardMotos" onclick="seleccionarArea('Refacciones para Moto')" class="cursor-pointer p-5 bg-gradient-to-br from-red-900/30 to-slate-800 border border-red-500/20 rounded-2xl hover:border-red-500/50 transition">
         <div class="flex justify-between items-start mb-3">
           <i data-lucide="bike" class="w-8 h-8 text-red-400"></i>
           <span id="countMotos" class="text-sm font-extrabold bg-red-500/20 text-red-300 px-3 py-1 rounded-full border border-red-500/30">0 arts</span>
@@ -131,7 +110,7 @@
         <p class="text-xs text-slate-400">Llantas, aceites, cascos</p>
       </div>
 
-      <div onclick="seleccionarArea('Abarrotes Básicos')" class="cursor-pointer p-5 bg-gradient-to-br from-emerald-900/30 to-slate-800 border border-emerald-500/20 rounded-2xl hover:border-emerald-500/50 transition">
+      <div id="cardAbarrotes" onclick="seleccionarArea('Abarrotes Básicos')" class="cursor-pointer p-5 bg-gradient-to-br from-emerald-900/30 to-slate-800 border border-emerald-500/20 rounded-2xl hover:border-emerald-500/50 transition">
         <div class="flex justify-between items-start mb-3">
           <i data-lucide="shopping-cart" class="w-8 h-8 text-emerald-400"></i>
           <span id="countAbarrotes" class="text-sm font-extrabold bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-full border border-emerald-500/30">0 arts</span>
@@ -141,32 +120,45 @@
       </div>
     </div>
 
-    <!-- INDICADOR DE ÁREA SELECCIONADA -->
+    <!-- NUEVA BARRA DINÁMICA DE SUBCATEGORÍAS -->
+    <div id="subcategoriesContainer" class="mb-6 p-4 bg-slate-800/50 border border-slate-700/60 rounded-2xl">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <i data-lucide="filter" class="w-4 h-4 text-blue-400"></i>
+          <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Subcategorías disponibles:</span>
+        </div>
+        <button onclick="seleccionarArea('Todas')" class="text-xs text-blue-400 hover:text-blue-300 underline">Ver Todo el Catálogo</button>
+      </div>
+      
+      <!-- Lista horizontal de botones de categorías -->
+      <div id="subcategoriesList" class="flex flex-wrap gap-2">
+        <span class="text-xs text-slate-500">Haz clic en un área de negocio arriba para ver sus categorías.</span>
+      </div>
+    </div>
+
+    <!-- ENCABEZADO DE RESULTADOS -->
     <div class="flex items-center justify-between mb-4">
       <h2 id="areaTitle" class="text-lg font-bold text-slate-200">Todos los Productos</h2>
       <span id="productCounter" class="text-xs text-slate-400">Cargando productos...</span>
     </div>
 
-    <!-- REJILLA DE PRODUCTOS RESPONSIVA -->
+    <!-- REJILLA DE PRODUCTOS -->
     <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      <!-- Los productos se cargan dinámicamente desde Supabase -->
+      <!-- Cargado dinámicamente -->
     </div>
   </main>
 
-  <!-- MODAL DE FICHA TÉCNICA Y MARGEN -->
+  <!-- MODAL DE FICHA TÉCNICA -->
   <div id="productModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
       <button onclick="cerrarModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
         <i data-lucide="x" class="w-6 h-6"></i>
       </button>
-
-      <div id="modalContent">
-        <!-- Contenido dinámico del producto -->
-      </div>
+      <div id="modalContent"></div>
     </div>
   </div>
 
-  <!-- LÓGICA DE JAVASCRIPT CON SUPABASE -->
+  <!-- SCRIPT LÓGICO -->
   <script>
     const SUPABASE_URL = "https://zvtirryhqxxldceumfjs.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D6OqQEeNZWqXIE9I0qfz_A_9ilgTB4t";
@@ -174,6 +166,7 @@
 
     let todosLosProductos = [];
     let areaActual = "Todas";
+    let subcategoriaActual = "Todas";
 
     async function cargarCatalogo() {
       try {
@@ -193,7 +186,6 @@
         if (error) throw error;
 
         todosLosProductos = products.map(p => {
-          // Extraer precio de forma ULTRA-SEGURA (manejando arrays u objetos)
           let precio = 0;
           let costo = 0;
           let stock = 0;
@@ -216,7 +208,7 @@
             }
           }
 
-          const categoriaNombre = p.categories?.name || "General";
+          const categoriaNombre = p.categories?.name || p.attributes?.categoria_original || "General";
           const area = p.attributes?.area_negocio || inferirArea(categoriaNombre);
 
           return {
@@ -229,94 +221,107 @@
           };
         });
 
-function actualizarContadores() {
-      let electricos = 0;
-      let herrajes = 0;
-      let motos = 0;
-      let abarrotes = 0;
-
-      todosLosProductos.forEach(p => {
-        const areaStr = (p.area || '').toLowerCase();
-        const catStr = (p.categoriaNombre || '').toLowerCase();
-
-        if (areaStr.includes('eléctric') || areaStr.includes('electric') || catStr.includes('foco') || catStr.includes('cable')) {
-          electricos++;
-        } else if (areaStr.includes('moto') || catStr.includes('moto') || catStr.includes('refacc')) {
-          motos++;
-        } else if (areaStr.includes('abarrot') || catStr.includes('abarrot') || catStr.includes('despensa')) {
-          abarrotes++;
-        } else {
-          // Por defecto, o si coincide con herrajes
-          herrajes++;
-        }
-      });
-
-      document.getElementById("countElectricos").innerText = `${electricos} arts`;
-      document.getElementById("countHerrajes").innerText = `${herrajes} arts`;
-      document.getElementById("countMotos").innerText = `${motos} arts`;
-      document.getElementById("countAbarrotes").innerText = `${abarrotes} arts`;
-    }
-
-
-
-
-
         renderizarProductos();
+        generarSubcategorias();
       } catch (e) {
         console.error("Error al cargar productos de Supabase:", e);
       }
+    }
+
+    function inferirArea(cat) {
+      cat = cat.toLowerCase();
+      if (cat.includes("foco") || cat.includes("electr") || cat.includes("cable")) return "Artículos Eléctricos";
+      if (cat.includes("bisagra") || cat.includes("carretilla") || cat.includes("chapa")) return "Herrajes";
+      if (cat.includes("moto") || cat.includes("refacc")) return "Refacciones para Moto";
+      if (cat.includes("abarrot") || cat.includes("despensa")) return "Abarrotes Básicos";
+      return "Herrajes";
+    }
+
+    function seleccionarArea(area) {
+      areaActual = area;
+      subcategoriaActual = "Todas"; // Resetea subcategoría
+      document.getElementById("areaTitle").innerText = area === "Todas" ? "Todos los Productos" : area;
+      
+      generarSubcategorias();
+      renderizarProductos();
+    }
+
+    function seleccionarSubcategoria(subcat) {
+      subcategoriaActual = subcat;
+      renderizarProductos();
+    }
+
+    function generarSubcategorias() {
+      const container = document.getElementById("subcategoriesList");
+      
+      // Productos del área elegida
+      const productosDelArea = areaActual === "Todas" 
+        ? todosLosProductos 
+        : todosLosProductos.filter(p => p.area === areaActual);
+
+      // Extraer nombres de categorías únicas
+      const categoriasUnicas = [...new Set(productosDelArea.map(p => p.categoriaNombre))].filter(Boolean).sort();
+
+      if (categoriasUnicas.length === 0) {
+        container.innerHTML = `<span class="text-xs text-slate-500">No hay subcategorías en esta sección.</span>`;
+        return;
+      }
+
+      let html = `
+        <button onclick="seleccionarSubcategoria('Todas')" class="px-3 py-1 rounded-lg text-xs font-semibold transition ${subcategoriaActual === 'Todas' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}">
+          Todas (${productosDelArea.length})
+        </button>
+      `;
+
+      categoriasUnicas.forEach(cat => {
+        const count = productosDelArea.filter(p => p.categoriaNombre === cat).length;
+        const isActive = subcategoriaActual === cat;
+        html += `
+          <button onclick="seleccionarSubcategoria('${cat}')" class="px-3 py-1 rounded-lg text-xs font-semibold transition ${isActive ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}">
+            ${cat} (${count})
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
     }
 
     function renderizarProductos() {
       const grid = document.getElementById("productsGrid");
       const busqueda = (document.getElementById("searchInput").value || document.getElementById("mobileSearchInput").value || "").toLowerCase();
 
-      // --- RECALCULO EN TIEMPO REAL DE CONTADORES POR ÁREA ---
-      let electricos = 0;
-      let herrajes = 0;
-      let motos = 0;
-      let abarrotes = 0;
+      // Recálculo de Contadores por Área
+      let electricos = 0, herrajes = 0, motos = 0, abarrotes = 0;
 
       todosLosProductos.forEach(p => {
         const areaStr = (p.area || '').toLowerCase();
         const catStr = (p.categoriaNombre || '').toLowerCase();
 
-        if (areaStr.includes('eléctric') || areaStr.includes('electric') || catStr.includes('foco') || catStr.includes('cable') || catStr.includes('contacto')) {
-          electricos++;
-        } else if (areaStr.includes('moto') || catStr.includes('moto') || catStr.includes('refacc')) {
-          motos++;
-        } else if (areaStr.includes('abarrot') || catStr.includes('abarrot') || catStr.includes('despensa') || catStr.includes('limpieza')) {
-          abarrotes++;
-        } else {
-          // Todo lo demás se contabiliza en Herrajes
-          herrajes++;
-        }
+        if (areaStr.includes('eléctric') || areaStr.includes('electric') || catStr.includes('foco') || catStr.includes('cable')) electricos++;
+        else if (areaStr.includes('moto') || catStr.includes('moto') || catStr.includes('refacc')) motos++;
+        else if (areaStr.includes('abarrot') || catStr.includes('abarrot') || catStr.includes('despensa')) abarrotes++;
+        else herrajes++;
       });
 
-      // Actualización directa de los badges en la interfaz
-      const elElec = document.getElementById("countElectricos");
-      const elHerr = document.getElementById("countHerrajes");
-      const elMoto = document.getElementById("countMotos");
-      const elAbar = document.getElementById("countAbarrotes");
+      if (document.getElementById("countElectricos")) document.getElementById("countElectricos").innerText = `${electricos} arts`;
+      if (document.getElementById("countHerrajes")) document.getElementById("countHerrajes").innerText = `${herrajes} arts`;
+      if (document.getElementById("countMotos")) document.getElementById("countMotos").innerText = `${motos} arts`;
+      if (document.getElementById("countAbarrotes")) document.getElementById("countAbarrotes").innerText = `${abarrotes} arts`;
 
-      if (elElec) elElec.innerText = `${electricos} arts`;
-      if (elHerr) elHerr.innerText = `${herrajes} arts`;
-      if (elMoto) elMoto.innerText = `${motos} arts`;
-      if (elAbar) elAbar.innerText = `${abarrotes} arts`;
-
-      // --- FILTRADO PARA MOSTRAR EN LA REJILLA ---
+      // Filtrado por Área + Subcategoría + Buscador
       let filtrados = todosLosProductos.filter(p => {
         const coincideArea = areaActual === "Todas" || p.area === areaActual;
+        const coincideSubcat = subcategoriaActual === "Todas" || p.categoriaNombre === subcategoriaActual;
         const coincideBusqueda = p.name.toLowerCase().includes(busqueda) || 
                                  p.sku.toLowerCase().includes(busqueda) || 
                                  p.categoriaNombre.toLowerCase().includes(busqueda);
-        return coincideArea && coincideBusqueda;
+        return coincideArea && coincideSubcat && coincideBusqueda;
       });
 
       document.getElementById("productCounter").innerText = `${filtrados.length} productos`;
 
       if (filtrados.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">No se encontraron productos en esta sección.</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">No se encontraron productos en esta categoría.</div>`;
         return;
       }
 
@@ -345,12 +350,6 @@ function actualizarContadores() {
       `).join('');
 
       lucide.createIcons();
-    }
-
-    function seleccionarArea(area) {
-      areaActual = area;
-      document.getElementById("areaTitle").innerText = area === "Todas" ? "Todos los Productos" : area;
-      renderizarProductos();
     }
 
     function verFichaTecnica(id) {
