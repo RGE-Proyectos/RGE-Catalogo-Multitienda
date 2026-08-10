@@ -256,10 +256,35 @@
 
     function generarSubcategorias() {
       const container = document.getElementById("subcategoriesList");
-      const productosDelArea = areaActual === "Todas" 
-        ? todosLosProductos 
-        : todosLosProductos.filter(p => p.area === areaActual);
 
+      // 1. Filtrar los productos pertenecientes AL ÁREA SELECCIONADA usando la misma lógica de los contadores
+      const productosDelArea = todosLosProductos.filter(p => {
+        if (areaActual === "Todas") return true;
+
+        const areaStr = (p.area || '').toLowerCase();
+        const catStr = (p.categoriaNombre || '').toLowerCase();
+
+        if (areaActual === "Artículos Eléctricos") {
+          return areaStr.includes('eléctric') || areaStr.includes('electric') || catStr.includes('foco') || catStr.includes('cable') || catStr.includes('electr');
+        }
+        if (areaActual === "Refacciones para Moto") {
+          return areaStr.includes('moto') || catStr.includes('moto') || catStr.includes('refacc');
+        }
+        if (areaActual === "Abarrotes Básicos") {
+          return areaStr.includes('abarrot') || catStr.includes('abarrot') || catStr.includes('despensa') || catStr.includes('limpieza');
+        }
+        if (areaActual === "Herrajes") {
+          // Herrajes excluye explícitamente las otras divisiones
+          const esElectrico = areaStr.includes('eléctric') || areaStr.includes('electric') || catStr.includes('foco') || catStr.includes('cable');
+          const esMoto = areaStr.includes('moto') || catStr.includes('moto') || catStr.includes('refacc');
+          const esAbarrotes = areaStr.includes('abarrot') || catStr.includes('abarrot') || catStr.includes('despensa');
+          
+          return !esElectrico && !esMoto && !esAbarrotes;
+        }
+        return true;
+      });
+
+      // 2. Extraer categorías únicas SOLAMENTE de esos productos filtrados
       const categoriasUnicas = [...new Set(productosDelArea.map(p => p.categoriaNombre))].filter(Boolean).sort();
 
       if (categoriasUnicas.length === 0) {
