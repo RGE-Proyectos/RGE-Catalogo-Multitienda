@@ -129,8 +129,6 @@
         </div>
         <button onclick="seleccionarArea('Todas')" class="text-xs text-blue-400 hover:text-blue-300 underline">Ver Todo el Catálogo</button>
       </div>
-      
-      <!-- Lista horizontal de botones de categorías -->
       <div id="subcategoriesList" class="flex flex-wrap gap-2">
         <span class="text-xs text-slate-500">Haz clic en un área de negocio arriba para ver sus categorías.</span>
       </div>
@@ -164,9 +162,14 @@
     const SUPABASE_KEY = "sb_publishable_D6OqQEeNZWqXIE9I0qfz_A_9ilgTB4t";
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // CONFIGURACIÓN DE SEGURIDAD
+    const CLAVE_ADMIN = "9514"; // 🔒 Cambia esta contraseña si lo deseas
+    let modoAdminActivado = false;
+
     let todosLosProductos = [];
     let areaActual = "Todas";
     let subcategoriaActual = "Todas";
+    let productoSeleccionadoId = null;
 
     async function cargarCatalogo() {
       try {
@@ -239,7 +242,7 @@
 
     function seleccionarArea(area) {
       areaActual = area;
-      subcategoriaActual = "Todas"; // Resetea subcategoría
+      subcategoriaActual = "Todas";
       document.getElementById("areaTitle").innerText = area === "Todas" ? "Todos los Productos" : area;
       
       generarSubcategorias();
@@ -253,13 +256,10 @@
 
     function generarSubcategorias() {
       const container = document.getElementById("subcategoriesList");
-      
-      // Productos del área elegida
       const productosDelArea = areaActual === "Todas" 
         ? todosLosProductos 
         : todosLosProductos.filter(p => p.area === areaActual);
 
-      // Extraer nombres de categorías únicas
       const categoriasUnicas = [...new Set(productosDelArea.map(p => p.categoriaNombre))].filter(Boolean).sort();
 
       if (categoriasUnicas.length === 0) {
@@ -290,7 +290,6 @@
       const grid = document.getElementById("productsGrid");
       const busqueda = (document.getElementById("searchInput").value || document.getElementById("mobileSearchInput").value || "").toLowerCase();
 
-      // Recálculo de Contadores por Área
       let electricos = 0, herrajes = 0, motos = 0, abarrotes = 0;
 
       todosLosProductos.forEach(p => {
@@ -308,7 +307,6 @@
       if (document.getElementById("countMotos")) document.getElementById("countMotos").innerText = `${motos} arts`;
       if (document.getElementById("countAbarrotes")) document.getElementById("countAbarrotes").innerText = `${abarrotes} arts`;
 
-      // Filtrado por Área + Subcategoría + Buscador
       let filtrados = todosLosProductos.filter(p => {
         const coincideArea = areaActual === "Todas" || p.area === areaActual;
         const coincideSubcat = subcategoriaActual === "Todas" || p.categoriaNombre === subcategoriaActual;
@@ -353,10 +351,34 @@
     }
 
     function verFichaTecnica(id) {
+      productoSeleccionadoId = id;
       const p = todosLosProductos.find(item => item.id === id);
       if (!p) return;
 
       const margen = p.precio > 0 ? (((p.precio - p.costo) / p.precio) * 100).toFixed(1) : 0;
+
+      let htmlAdminSection = '';
+
+      if (modoAdminActivado) {
+        htmlAdminSection = `
+          <div class="bg-slate-800 p-3 rounded-xl border border-amber-500/40 mb-4 text-xs space-y-1">
+            <p class="font-bold text-amber-400 flex items-center justify-between">
+              <span>🔒 Información de Propietario</span>
+              <button onclick="desactivarModoAdmin()" class="text-[10px] text-slate-400 hover:text-white underline">Cerrar sesión admin</button>
+            </p>
+            <div class="flex justify-between text-slate-300"><span>Costo Directo:</span><span class="font-mono font-bold">$${p.costo.toFixed(2)}</span></div>
+            <div class="flex justify-between text-slate-300"><span>Margen Bruto:</span><span class="font-mono font-bold text-amber-300">${margen}%</span></div>
+          </div>
+        `;
+      } else {
+        htmlAdminSection = `
+          <div class="mb-4 text-center">
+            <button onclick="solicitarClaveAdmin()" class="text-xs text-slate-500 hover:text-slate-300 flex items-center justify-center gap-1 mx-auto py-1 px-3 bg-slate-800/60 rounded-lg border border-slate-700/50 transition">
+              <i data-lucide="lock" class="w-3 h-3"></i> Acceso Propietario
+            </button>
+          </div>
+        `;
+      }
 
       document.getElementById("modalContent").innerHTML = `
         <div class="text-center mb-4">
@@ -378,19 +400,30 @@
           </div>
         </div>
 
-        <div class="bg-slate-800 p-3 rounded-xl border border-slate-700/80 mb-4 text-xs space-y-1">
-          <p class="font-bold text-amber-400 flex items-center gap-1">🔒 Ficha Técnica de Propietario</p>
-          <div class="flex justify-between text-slate-300"><span>Costo Directo:</span><span class="font-mono">$${p.costo.toFixed(2)}</span></div>
-          <div class="flex justify-between text-slate-300"><span>Margen Bruto:</span><span class="font-mono">${margen}%</span></div>
-        </div>
+        ${htmlAdminSection}
 
         <a href="https://wa.me/?text=Hola,%20me%20interesa%20el%20producto%20${encodeURIComponent(p.name)}%20(SKU:%20${p.sku})" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition">
-          <i data-lucide="message-square" class="w-5 h-5"></i> Enviar Ficha por WhatsApp
+          <i data-lucide="message-square" class="w-5 h-5"></i> Enviar Pedido por WhatsApp
         </a>
       `;
 
       document.getElementById("productModal").classList.remove("hidden");
       lucide.createIcons();
+    }
+
+    function solicitarClaveAdmin() {
+      const pass = prompt("Ingrese su clave de propietario:");
+      if (pass === CLAVE_ADMIN) {
+        modoAdminActivado = true;
+        verFichaTecnica(productoSeleccionadoId);
+      } else if (pass !== null) {
+        alert("❌ Clave incorrecta.");
+      }
+    }
+
+    function desactivarModoAdmin() {
+      modoAdminActivado = false;
+      verFichaTecnica(productoSeleccionadoId);
     }
 
     function cerrarModal() {
