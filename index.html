@@ -315,17 +315,25 @@ const COLORES_DIVISIONES = {
 
     function generarSubcategorias() {
       const container = document.getElementById("subcategoriesList");
+      const wrapper = document.getElementById("subcategoriesContainer"); // El contenedor padre de la barra
 
-      // 1. Productos estrictos de la división seleccionada
-      const productosDelArea = areaActual === "Todas" 
-        ? todosLosProductos 
-        : todosLosProductos.filter(p => p.area === areaActual);
+      // 1. Si no hay una división seleccionada (está en "Todas"), Ocultamos la barra
+      if (areaActual === "Todas") {
+        if (wrapper) wrapper.classList.add("hidden");
+        return;
+      }
 
-      // 2. Extraer subcategorías únicas asociadas únicamente a esa división
+      // 2. Si hay una división activa, MOSTRAMOS la barra
+      if (wrapper) wrapper.classList.remove("hidden");
+
+      // 3. Filtramos los productos estrictos de esa división
+      const productosDelArea = todosLosProductos.filter(p => p.area === areaActual);
+
+      // 4. Extraemos las subcategorías asociadas
       const categoriasUnicas = [...new Set(productosDelArea.map(p => p.categoriaNombre))].filter(Boolean).sort();
 
       if (categoriasUnicas.length === 0) {
-        container.innerHTML = `<span class="text-xs text-slate-500">No hay subcategorías en esta sección.</span>`;
+        container.innerHTML = `<span class="text-xs text-slate-500">No hay subcategorías en esta división.</span>`;
         return;
       }
 
@@ -347,6 +355,7 @@ const COLORES_DIVISIONES = {
 
       container.innerHTML = html;
     }
+
 
     function renderizarProductos() {
       const grid = document.getElementById("productsGrid");
