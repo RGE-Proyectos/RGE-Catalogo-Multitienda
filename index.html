@@ -139,36 +139,48 @@
     // Definiendo colores para los botones de las Divisiones en la app
 
 const COLORES_DIVISIONES = {
-  "Herrajes": {
-    bg: "rgba(108, 117, 125, 0.15)",    // Gris translúcido
-    border: "#6c757d",                   // Gris
-    text: "#adb5bd"
-  },
-  "Refacciones Moto": {
-    bg: "rgba(220, 53, 69, 0.15)",     // Rojo translúcido
-    border: "#dc3545",                  // Rojo
-    text: "#ff6b6b"
-  },
-  "Perfiles y Vidrios": {
-    bg: "rgba(0, 212, 255, 0.15)",     // Azul Neón translúcido
-    border: "#00d4ff",                  // Azul Neón
-    text: "#00d4ff"
-  },
-  "Abarrotes Básicos": {
-    bg: "rgba(217, 119, 6, 0.15)",     // Naranja Ocre translúcido
-    border: "#d97706",                  // Naranja Ocre
-    text: "#f59e0b"
-  },
-  "Electricos": {
-    bg: "rgba(234, 179, 8, 0.15)",      // Amarillo/Dorado translúcido
-    border: "#eab308",                  // Amarillo
-    text: "#fde047"
-  },
-  "Herramienta": {
-    bg: "rgba(16, 185, 129, 0.15)",     // Verde translúcido
-    border: "#10b981",                  // Verde
-    text: "#6ee7b7"
-  },
+    "Abarrotes Básicos": {
+      bg: "rgba(217, 119, 6, 0.15)",
+      border: "#d97706",
+      text: "#f59e0b"
+    },
+    "Checkouts": {
+      bg: "rgba(168, 85, 247, 0.15)",
+      border: "#a855f7",
+      text: "#c084fc"
+    },
+    "Electricos": {
+      bg: "rgba(234, 179, 8, 0.15)",
+      border: "#eab308",
+      text: "#fde047"
+    },
+    "Herrajes": {
+      bg: "rgba(108, 117, 125, 0.2)",
+      border: "#9ca3af",
+      text: "#d1d5db"
+    },
+    "Herramienta": {
+      bg: "rgba(16, 185, 129, 0.15)",
+      border: "#10b981",
+      text: "#6ee7b7"
+    },
+    "Perfiles y Vidrios": {
+      bg: "rgba(0, 212, 255, 0.15)",
+      border: "#00d4ff",
+      text: "#38bdf8"
+    },
+    "Pinturas": {
+      bg: "rgba(236, 72, 153, 0.15)",
+      border: "#ec4899",
+      text: "#f472b6"
+    },
+    "Refacciones Moto": {
+      bg: "rgba(239, 68, 68, 0.15)",
+      border: "#ef4444",
+      text: "#f87171"
+    },
+    
+  
   // Color por defecto si se agrega una división nueva en el futuro
   "DEFAULT": {
     bg: "rgba(99, 102, 241, 0.15)",
@@ -242,13 +254,15 @@ const COLORES_DIVISIONES = {
     }
 
     // 🎨 Genera automáticamente las tarjetas superiores según las divisiones encontradas en la Columna H
+    
     function renderizarTarjetasDivisiones() {
       const grid = document.getElementById("gridAreas");
+      if (!grid) return;
       
       // Contar productos por división
       const conteoDivisiones = {};
       todosLosProductos.forEach(p => {
-        const div = p.area || "General";
+        const div = p.area || "Herrajes";
         conteoDivisiones[div] = (conteoDivisiones[div] || 0) + 1;
       });
 
@@ -258,15 +272,21 @@ const COLORES_DIVISIONES = {
         const count = conteoDivisiones[div];
         const isActive = areaActual === div;
         
-        // Obtiene los colores configurados para esta división
+        // Obtiene la paleta de color para esta división
         const estilo = COLORES_DIVISIONES[div] || COLORES_DIVISIONES["DEFAULT"];
+
+        const estiloCard = isActive 
+          ? `background: ${estilo.bg}; border: 2px solid ${estilo.border}; box-shadow: 0 0 15px ${estilo.border}40;` 
+          : `background: rgba(30, 41, 59, 0.7); border: 1.5px solid ${estilo.border}80;`;
 
         return `
           <div onclick="seleccionarArea('${div}')" 
-               class="cursor-pointer p-4 bg-gradient-to-br from-slate-800 to-slate-900 border ${estilo.border} ${isActive ? `${estilo.bgActive} ring-2 ring-offset-2 ring-offset-slate-900` : 'opacity-80 hover:opacity-100'} rounded-2xl transition-all duration-200 shadow-lg">
+               style="${estiloCard}"
+               class="cursor-pointer p-4 rounded-2xl hover:scale-[1.02] transition-all duration-200">
             <div class="flex justify-between items-start mb-2">
-              <i data-lucide="layers" class="w-6 h-6 ${estilo.text}"></i>
-              <span class="text-xs font-extrabold px-3 py-0.5 rounded-full border ${estilo.badge}">
+              <i data-lucide="layers" class="w-6 h-6" style="color: ${estilo.text};"></i>
+              <span class="text-xs font-extrabold px-3 py-0.5 rounded-full" 
+                    style="background: ${estilo.bg}; color: ${estilo.text}; border: 1px solid ${estilo.border};">
                 ${count} arts
               </span>
             </div>
