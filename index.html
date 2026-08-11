@@ -136,6 +136,48 @@
     let subcategoriaActual = "Todas";
     let productoSeleccionadoId = null;
 
+    // Definiendo colores para los botones de las Divisiones en la app
+
+const COLORES_DIVISIONES = {
+  "Herrajes": {
+    bg: "rgba(108, 117, 125, 0.15)",    // Gris translúcido
+    border: "#6c757d",                   // Gris
+    text: "#adb5bd"
+  },
+  "Refacciones Moto": {
+    bg: "rgba(220, 53, 69, 0.15)",     // Rojo translúcido
+    border: "#dc3545",                  // Rojo
+    text: "#ff6b6b"
+  },
+  "Perfiles y Vidrios": {
+    bg: "rgba(0, 212, 255, 0.15)",     // Azul Neón translúcido
+    border: "#00d4ff",                  // Azul Neón
+    text: "#00d4ff"
+  },
+  "Abarrotes Básicos": {
+    bg: "rgba(217, 119, 6, 0.15)",     // Naranja Ocre translúcido
+    border: "#d97706",                  // Naranja Ocre
+    text: "#f59e0b"
+  },
+  "Electricos": {
+    bg: "rgba(234, 179, 8, 0.15)",      // Amarillo/Dorado translúcido
+    border: "#eab308",                  // Amarillo
+    text: "#fde047"
+  },
+  "Herramienta": {
+    bg: "rgba(16, 185, 129, 0.15)",     // Verde translúcido
+    border: "#10b981",                  // Verde
+    text: "#6ee7b7"
+  },
+  // Color por defecto si se agrega una división nueva en el futuro
+  "DEFAULT": {
+    bg: "rgba(99, 102, 241, 0.15)",
+    border: "#6366f1",
+    text: "#818cf8"
+  }
+};
+
+
     async function cargarCatalogo() {
       try {
         const { data: products, error } = await _supabase
@@ -216,11 +258,17 @@
         const count = conteoDivisiones[div];
         const isActive = areaActual === div;
         
+        // Obtiene los colores configurados para esta división
+        const estilo = COLORES_DIVISIONES[div] || COLORES_DIVISIONES["DEFAULT"];
+
         return `
-          <div onclick="seleccionarArea('${div}')" class="cursor-pointer p-4 bg-gradient-to-br from-slate-800 to-slate-900 border ${isActive ? 'border-blue-500 ring-2 ring-blue-500/30' : 'border-slate-700/80'} rounded-2xl hover:border-blue-500/50 transition">
+          <div onclick="seleccionarArea('${div}')" 
+               class="cursor-pointer p-4 bg-gradient-to-br from-slate-800 to-slate-900 border ${estilo.border} ${isActive ? `${estilo.bgActive} ring-2 ring-offset-2 ring-offset-slate-900` : 'opacity-80 hover:opacity-100'} rounded-2xl transition-all duration-200 shadow-lg">
             <div class="flex justify-between items-start mb-2">
-              <i data-lucide="layers" class="w-6 h-6 text-blue-400"></i>
-              <span class="text-sm font-extrabold bg-blue-500/20 text-blue-300 px-3 py-0.5 rounded-full border border-blue-500/30">${count} arts</span>
+              <i data-lucide="layers" class="w-6 h-6 ${estilo.text}"></i>
+              <span class="text-xs font-extrabold px-3 py-0.5 rounded-full border ${estilo.badge}">
+                ${count} arts
+              </span>
             </div>
             <h3 class="font-bold text-slate-100 text-base line-clamp-1">${div}</h3>
           </div>
@@ -300,18 +348,25 @@
         return;
       }
 
+      // 2. 🔁 BUCLE DE RENDERIZACIÓN DE PRODUCTOS
       grid.innerHTML = filtrados.map(p => {
         const esPrecioCero = p.precio <= 0;
+
+        // 🎯 Obtener paleta de color para la División de ESTE producto
+        const estiloDiv = COLORES_DIVISIONES[p.area] || COLORES_DIVISIONES["DEFAULT"];
 
         const htmlPrecio = esPrecioCero 
           ? `<span class="text-sm font-bold text-amber-400">Precio por definir</span>`
           : `<p class="text-lg font-bold text-emerald-400">$${p.precio.toFixed(2)}</p>`;
 
+        // 🏷️ Insignia / Badge de División con su color correspondiente
+        const badgeDivision = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${estiloDiv.badge}">${p.area}</span>`;
+
         const badgeNuevo = esPrecioCero 
           ? `<span class="text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md uppercase tracking-wider">¡Nuevo!</span>`
-          : `<span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md">${p.categoriaNombre}</span>`;
-
+          : `<span class="text-xs font-semibold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">${p.categoriaNombre}</span>`;
         return `
+
           <div onclick="verFichaTecnica('${p.id}')" class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between hover:border-blue-500/50 transition cursor-pointer">
             <div>
               <div class="h-48 bg-slate-900 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-2">
