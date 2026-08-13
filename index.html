@@ -298,164 +298,180 @@ const COLORES_DIVISIONES = {
       lucide.createIcons();
     }
 
-    function seleccionarArea(area) {
-      areaActual = area;
-      subcategoriaActual = "Todas";
-      document.getElementById("areaTitle").innerText = area === "Todas" ? "Todos los Productos" : area;
-      
-      renderizarTarjetasDivisiones();
-      generarSubcategorias();
-      renderizarProductos();
+    
+function seleccionarArea(area) {
+  areaActual = area;
+  subcategoriaActual = "Todas";
+  
+  // Limpiar buscadores al cambiar manualmente de división
+  const inputDesk = document.getElementById("searchInput");
+  const inputMob = document.getElementById("mobileSearchInput");
+  if (inputDesk) inputDesk.value = "";
+  if (inputMob) inputMob.value = "";
+
+  document.getElementById("areaTitle").innerText = area === "Todas" ? "Todos los Productos" : area;
+  renderizarTarjetasDivisiones();
+  generarSubcategorias();
+  renderizarProductos();
+}
+
+function generarSubcategorias(productosFiltradosPorBusqueda = null) {
+  const container = document.getElementById("subcategoriesList");
+  const wrapper = document.getElementById("subcategoriesContainer");
+
+  // Si hay una búsqueda activa, usamos los productos de la búsqueda. 
+  // Si no, filtramos por la división seleccionada arriba.
+  let productosBase = [];
+  
+  if (productosFiltradosPorBusqueda !== null) {
+    productosBase = productosFiltradosPorBusqueda;
+  } else if (areaActual !== "Todas") {
+    productosBase = todosLosProductos.filter(p => p.area === areaActual);
+  } else {
+    // Si está en "Todas" y no hay búsqueda, ocultamos la barra
+    if (wrapper) wrapper.classList.add("hidden");
+    return;
+  }
+
+  // Extraer las subcategorías únicas presentes en los productos resultantes
+  const categoriasUnicas = [...new Set(productosBase.map(p => p.categoriaNombre))].filter(Boolean).sort();
+
+  if (categoriasUnicas.length === 0) {
+    if (wrapper) wrapper.classList.add("hidden");
+    return;
+  }
+
+  if (wrapper) wrapper.classList.remove("hidden");
+
+  let html = `
+    <button onclick="seleccionarSubcategoria('Todas')" class="px-3 py-1 rounded-lg text-xs font-semibold transition ${subcategoriaActual === 'Todas' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}">
+      Todas (${productosBase.length})
+    </button>
+  `;
+
+  categoriasUnicas.forEach(cat => {
+    const count = productosBase.filter(p => p.categoriaNombre === cat).length;
+    const isActive = subcategoriaActual === cat;
+    html += `
+      <button onclick="seleccionarSubcategoria('${cat}')" class="px-3 py-1 rounded-lg text-xs font-semibold transition ${isActive ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}">
+        ${cat} (${count})
+      </button>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function renderizarProductos() {
+  const grid = document.getElementById("productsGrid");
+  const inputDesk = document.getElementById("searchInput")?.value || "";
+  const inputMob = document.getElementById("mobileSearchInput")?.value || "";
+  const busqueda = (inputDesk || inputMob).toLowerCase().trim();
+
+  let filtrados = [];
+
+  if (busqueda !== "") {
+    // 1. Filtrado Global cuando el usuario escribe
+    filtrados = todosLosProductos.filter(p => {
+      return (
+        p.name.toLowerCase().includes(busqueda) ||
+        p.sku.toLowerCase().includes(busqueda) ||
+        p.categoriaNombre.toLowerCase().includes(busqueda) ||
+        p.area.toLowerCase().includes(busqueda) ||
+        (p.description && p.description.toLowerCase().includes(busqueda))
+      );
+    });
+
+    // Actualizar Título dinámico
+    document.getElementById("areaTitle").innerText = `Resultados para "${busqueda}"`;
+
+    // Actualizar la barra de subcategorías DINÁMICAMENTE con los productos encontrados
+    generarSubcategorias(filtrados);
+
+    // Si la subcategoría seleccionada previamente no existe entre los resultados encontrados, reiniciar a "Todas"
+    if (subcategoriaActual !== "Todas") {
+      filtrados = filtrados.filter(p => p.categoriaNombre === subcategoriaActual);
     }
 
-    function seleccionarSubcategoria(subcat) {
-      subcategoriaActual = subcat;
-      renderizarProductos();
-    }
+  } else {
+    // 2. Comportamiento Normal por Clics en Divisiones
+    document.getElementById("areaTitle").innerText = areaActual === "Todas" ? "Todos los Productos" : areaActual;
+    
+    generarSubcategorias(null);
 
-    function generarSubcategorias() {
-      const container = document.getElementById("subcategoriesList");
-      const wrapper = document.getElementById("subcategoriesContainer"); // El contenedor padre de la barra
+    filtrados = todosLosProductos.filter(p => {
+      const coincideArea = areaActual === "Todas" || p.area === areaActual;
+      const coincideSubcat = subcategoriaActual === "Todas" || p.categoriaNombre === subcategoriaActual;
+      return coincideArea && coincideSubcat;
+    });
+  }
 
-      // 1. Si no hay una división seleccionada (está en "Todas"), Ocultamos la barra
-      if (areaActual === "Todas") {
-        if (wrapper) wrapper.classList.add("hidden");
-        return;
-      }
+  // Actualizar contador
+  const counterEl = document.getElementById("productCounter");
+  if (counterEl) {
+    counterEl.innerText = `${filtrados.length} productos`;
+  }
 
-      // 2. Si hay una división activa, MOSTRAMOS la barra
-      if (wrapper) wrapper.classList.remove("hidden");
+  // Si no hay resultados
+  if (filtrados.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-full text-center py-12 text-slate-400">
+        <i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 text-slate-600"></i>
+        <p class="text-base font-semibold">No se encontraron productos que coincidan con "${busqueda}".</p>
+        <p class="text-xs text-slate-500 mt-1">Prueba buscando con otro término o SKU.</p>
+      </div>
+    `;
+    lucide.createIcons();
+    return;
+  }
 
-      // 3. Filtramos los productos estrictos de esa división
-      const productosDelArea = todosLosProductos.filter(p => p.area === areaActual);
+  // Renderizar tarjetas de productos
+  grid.innerHTML = filtrados.map(p => {
+    const esPrecioCero = p.precio <= 0;
+    const estiloDiv = COLORES_DIVISIONES[p.area] || COLORES_DIVISIONES["DEFAULT"];
+    
+    const htmlPrecio = esPrecioCero
+      ? `<span class="text-sm font-bold text-amber-400">Precio por definir</span>`
+      : `<p class="text-lg font-bold text-emerald-400">$${p.precio.toFixed(2)}</p>`;
 
-      // 4. Extraemos las subcategorías asociadas
-      const categoriasUnicas = [...new Set(productosDelArea.map(p => p.categoriaNombre))].filter(Boolean).sort();
+    const badgeDivision = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md border" style="background: ${estiloDiv.bg}; color: ${estiloDiv.text}; border-color: ${estiloDiv.border};">${p.area}</span>`;
+    
+    const badgeNuevo = esPrecioCero
+      ? `<span class="text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md uppercase tracking-wider">¡Nuevo!</span>`
+      : `<span class="text-xs font-semibold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">${p.categoriaNombre}</span>`;
 
-      if (categoriasUnicas.length === 0) {
-        container.innerHTML = `<span class="text-xs text-slate-500">No hay subcategorías en esta división.</span>`;
-        return;
-      }
-
-      let html = `
-        <button onclick="seleccionarSubcategoria('Todas')" class="px-3 py-1 rounded-lg text-xs font-semibold transition ${subcategoriaActual === 'Todas' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}">
-          Todas (${productosDelArea.length})
-        </button>
-      `;
-
-      categoriasUnicas.forEach(cat => {
-        const count = productosDelArea.filter(p => p.categoriaNombre === cat).length;
-        const isActive = subcategoriaActual === cat;
-        html += `
-          <button onclick="seleccionarSubcategoria('${cat}')" class="px-3 py-1 rounded-lg text-xs font-semibold transition ${isActive ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}">
-            ${cat} (${count})
-          </button>
-        `;
-      });
-
-      container.innerHTML = html;
-    }
-
-
-  function renderizarProductos() {
-      const grid = document.getElementById("productsGrid");
-      const inputDesk = document.getElementById("searchInput")?.value || "";
-      const inputMob = document.getElementById("mobileSearchInput")?.value || "";
-      const busqueda = (inputDesk || inputMob).toLowerCase().trim();
-
-      // 1. Filtrar productos con lógica inteligente
-      let filtrados = todosLosProductos.filter(p => {
-        // Coincidencia de texto en múltiples campos
-        const coincideBusqueda = busqueda === "" || 
-                                 p.name.toLowerCase().includes(busqueda) || 
-                                 p.sku.toLowerCase().includes(busqueda) || 
-                                 p.categoriaNombre.toLowerCase().includes(busqueda) ||
-                                 p.area.toLowerCase().includes(busqueda) ||
-                                 (p.description && p.description.toLowerCase().includes(busqueda));
-
-        // Si el usuario escribió en el buscador, busca GLOBALMENTE en todo el catálogo
-        if (busqueda !== "") {
-          return coincideBusqueda;
-        }
-
-        // Si el buscador está vacío, respeta los filtros de División y Subcategoría seleccionados
-        const coincideArea = areaActual === "Todas" || p.area === areaActual;
-        const coincideSubcat = subcategoriaActual === "Todas" || p.categoriaNombre === subcategoriaActual;
-        return coincideArea && coincideSubcat;
-      });
-
-      // Actualizar contador
-      const counterEl = document.getElementById("productCounter");
-      if (counterEl) {
-        counterEl.innerText = busqueda !== "" 
-          ? `${filtrados.length} resultados para "${busqueda}"` 
-          : `${filtrados.length} productos`;
-      }
-
-      // 2. Si no hay resultados
-      if (filtrados.length === 0) {
-        grid.innerHTML = `
-          <div class="col-span-full text-center py-12 text-slate-400">
-            <i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 text-slate-600"></i>
-            <p class="text-base font-semibold">No se encontraron productos que coincidan con "${busqueda}".</p>
-            <p class="text-xs text-slate-500 mt-1">Prueba buscando con otro término o SKU.</p>
+    return `
+      <div onclick="verFichaTecnica('${p.id}')" class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between hover:border-slate-500 transition cursor-pointer shadow-md">
+        <div>
+          <div class="h-48 bg-slate-900 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-2">
+            <img src="${p.attributes?.imagen_url || 'https://via.placeholder.com/200'}" class="max-h-full max-w-full object-contain" alt="${p.name}" />
           </div>
-        `;
-        lucide.createIcons();
-        return;
-      }
-
-      // 3. Renderizar rejilla de productos
-      grid.innerHTML = filtrados.map(p => {
-        const esPrecioCero = p.precio <= 0;
-        const estiloDiv = COLORES_DIVISIONES[p.area] || COLORES_DIVISIONES["DEFAULT"];
-
-        const htmlPrecio = esPrecioCero 
-          ? `<span class="text-sm font-bold text-amber-400">Precio por definir</span>`
-          : `<p class="text-lg font-bold text-emerald-400">$${p.precio.toFixed(2)}</p>`;
-
-        const badgeDivision = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md border" style="background: ${estiloDiv.bg}; color: ${estiloDiv.text}; border-color: ${estiloDiv.border};">${p.area}</span>`;
-
-        const badgeNuevo = esPrecioCero 
-          ? `<span class="text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md uppercase tracking-wider">¡Nuevo!</span>`
-          : `<span class="text-xs font-semibold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">${p.categoriaNombre}</span>`;
-
-        return `
-          <div onclick="verFichaTecnica('${p.id}')" class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between hover:border-slate-500 transition cursor-pointer shadow-md">
-            <div>
-              <div class="h-48 bg-slate-900 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-2">
-                <img src="${p.attributes?.imagen_url || 'https://via.placeholder.com/200'}" class="max-h-full max-w-full object-contain" alt="${p.name}" />
-              </div>
-              
-              <div class="flex items-center justify-between gap-1 mb-1">
-                ${badgeDivision}
-                <span class="text-[11px] text-slate-400 font-mono">${p.sku}</span>
-              </div>
-
-              <div class="mb-1">
-                ${badgeNuevo}
-              </div>
-
-              <h3 class="font-bold text-slate-100 text-sm mt-2 line-clamp-2">${p.name}</h3>
-            </div>
-
-            <div class="mt-4 pt-3 border-t border-slate-700/50 flex items-center justify-between">
-              <div>
-                <p class="text-[10px] text-slate-400 uppercase tracking-wider">Precio</p>
-                ${htmlPrecio}
-              </div>
-              <div class="text-right">
-                <span class="text-xs px-2 py-1 rounded-full ${p.stock > 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}">
-                  Disponibles: ${p.stock}
-                </span>
-              </div>
-            </div>
+          <div class="flex items-center justify-between gap-1 mb-1">
+            ${badgeDivision}
+            <span class="text-[11px] text-slate-400 font-mono">${p.sku}</span>
           </div>
-        `;
-      }).join('');
+          <div class="mb-1">
+            ${badgeNuevo}
+          </div>
+          <h3 class="font-bold text-slate-100 text-sm mt-2 line-clamp-2">${p.name}</h3>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-700/50 flex items-center justify-between">
+          <div>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider">Precio</p>
+            ${htmlPrecio}
+          </div>
+          <div class="text-right">
+            <span class="text-xs px-2 py-1 rounded-full ${p.stock > 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}">
+              Disponibles: ${p.stock}
+            </span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
 
-      lucide.createIcons();
-    }
+  lucide.createIcons();
+}
 
     function verFichaTecnica(id) {
       productoSeleccionadoId = id;
