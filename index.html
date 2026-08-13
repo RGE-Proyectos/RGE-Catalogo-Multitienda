@@ -1,309 +1,251 @@
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RGE-Catálogo Multinegocio</title>
-  
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Supabase JS Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              500: '#3b82f6',
-              600: '#2563eb',
-            }
-          }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RGE-Catálogo Multinegocio</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Supabase JS Client-->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        brand: {
+          500: '#3b82f6',
+          600: '#2563eb',
         }
       }
     }
-  </script>
+  }
+}
+</script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-12 transition-colors duration-200">
 
-  <!-- HEADER / BARRA SUPERIOR -->
-  <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 shadow-lg">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-      
-      <!-- LOGO Y TÍTULO -->
-      <div class="flex items-center gap-3">
-        <div class="p-2 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl shadow-lg">
-          <i data-lucide="store" class="w-6 h-6 text-white"></i>
-        </div>
-        <div>
-          <h1 class="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-            RGE-Catálogo Multinegocio
-          </h1>
-          <p class="text-xs text-slate-400">Catálogo General y Subcategorías</p>
-        </div>
+<!-- HEADER / BARRA SUPERIOR -->
+<header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 shadow-lg">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+    <!-- LOGO Y TÍTULO -->
+    <div class="flex items-center gap-3">
+      <div class="p-2 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl shadow-lg">
+        <i data-lucide="store" class="w-6 h-6 text-white"></i>
       </div>
-
-      <!-- BUSCADOR DESK -->
-      <div class="relative flex-1 max-w-md hidden md:block">
-        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-        <input 
-          type="text" 
-          id="searchInput"
-          onkeyup="filtrarProductos()"
-          placeholder="Buscar por producto, SKU o categoría..." 
-          class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+      <div>
+        <h1 class="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+          RGE-Catálogo Multinegocio
+        </h1>
+        <p class="text-xs text-slate-400">Catálogo General y Subcategorías</p>
       </div>
-
-      <button onclick="toggleMobileSearch()" class="md:hidden p-2 text-slate-400 hover:text-white">
-        <i data-lucide="search" class="w-6 h-6"></i>
-      </button>
     </div>
 
-    <!-- BUSCADOR MÓVIL -->
-    <div id="mobileSearchContainer" class="hidden px-4 pb-3 md:hidden">
-      <input 
-        type="text" 
-        id="mobileSearchInput"
-        onkeyup="filtrarProductosMobile()"
-        placeholder="Buscar producto o SKU..." 
-        class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <!-- BUSCADOR DESKTOP -->
+    <div class="relative flex-1 max-w-md hidden md:block">
+      <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+      <input
+        type="text"
+        id="searchInput"
+        onkeyup="filtrarProductos()"
+        placeholder="Buscar por producto, SKU o categoría..."
+        class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
-  </header>
 
-  <!-- CONTENIDO PRINCIPAL -->
-  <main class="max-w-7xl mx-auto px-4 mt-6">
-    
-    <!-- CONTENEDOR DINÁMICO DE DIVISIONES/NEGOCIOS -->
-    <div id="gridAreas" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-      <!-- Se llenará automáticamente con las Divisiones de la Columna H -->
-    </div>
+    <!-- BOTÓN BÚSQUEDA MÓVIL -->
+    <button onclick="toggleMobileSearch()" class="md:hidden p-2 text-slate-400 hover:text-white">
+      <i data-lucide="search" class="w-6 h-6"></i>
+    </button>
+  </div>
 
-    <!-- BARRA DINÁMICA DE SUBCATEGORÍAS -->
-    <div id="subcategoriesContainer" class="mb-6 p-4 bg-slate-800/50 border border-slate-700/60 rounded-2xl">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-2">
-          <i data-lucide="filter" class="w-4 h-4 text-blue-400"></i>
-          <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Subcategorías disponibles:</span>
-        </div>
-        <button onclick="seleccionarArea('Todas')" class="text-xs text-blue-400 hover:text-blue-300 underline">Ver Todo el Catálogo</button>
+  <!-- BUSCADOR MÓVIL -->
+  <div id="mobileSearchContainer" class="hidden px-4 pb-3 md:hidden">
+    <input
+      type="text"
+      id="mobileSearchInput"
+      onkeyup="filtrarProductosMobile()"
+      placeholder="Buscar producto o SKU..."
+      class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  </div>
+</header>
+
+<!-- CONTENIDO PRINCIPAL -->
+<main class="max-w-7xl mx-auto px-4 mt-6">
+  <!-- CONTENEDOR DINÁMICO DE DIVISIONES/NEGOCIOS -->
+  <div id="gridAreas" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+    <!-- Se llenará automáticamente con las Divisiones -->
+  </div>
+
+  <!-- BARRA DINÁMICA DE SUBCATEGORÍAS -->
+  <div id="subcategoriesContainer" class="mb-6 p-4 bg-slate-800/50 border border-slate-700/60 rounded-2xl hidden">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <i data-lucide="filter" class="w-4 h-4 text-blue-400"></i>
+        <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Subcategorías disponibles:</span>
       </div>
-      <div id="subcategoriesList" class="flex flex-wrap gap-2">
-        <span class="text-xs text-slate-500">Haz clic en una división arriba para ver sus categorías.</span>
-      </div>
+      <button onclick="seleccionarArea('Todas')" class="text-xs text-blue-400 hover:text-blue-300 underline">Ver Todo el Catálogo</button>
     </div>
-
-    <!-- ENCABEZADO DE RESULTADOS -->
-    <div class="flex items-center justify-between mb-4">
-      <h2 id="areaTitle" class="text-lg font-bold text-slate-200">Todos los Productos</h2>
-      <span id="productCounter" class="text-xs text-slate-400">Cargando productos...</span>
-    </div>
-
-    <!-- REJILLA DE PRODUCTOS -->
-    <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      <!-- Cargado dinámicamente -->
-    </div>
-  </main>
-
-  <!-- MODAL DE FICHA TÉCNICA -->
-  <div id="productModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
-      <button onclick="cerrarModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
-        <i data-lucide="x" class="w-6 h-6"></i>
-      </button>
-      <div id="modalContent"></div>
+    <div id="subcategoriesList" class="flex flex-wrap gap-2">
+      <!-- Se llena dinámicamente -->
     </div>
   </div>
 
-  <!-- SCRIPT LÓGICO -->
-  <script>
-    const SUPABASE_URL = "https://zvtirryhqxxldceumfjs.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_D6OqQEeNZWqXIE9I0qfz_A_9ilgTB4t";
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <!-- ENCABEZADO DE RESULTADOS -->
+  <div class="flex items-center justify-between mb-4">
+    <h2 id="areaTitle" class="text-lg font-bold text-slate-200">Todos los Productos</h2>
+    <span id="productCounter" class="text-xs text-slate-400">Cargando productos...</span>
+  </div>
 
-    const CLAVE_ADMIN = "7200";
-    let modoAdminActivado = false;
+  <!-- REJILLA DE PRODUCTOS -->
+  <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <!-- Cargado dinámicamente -->
+  </div>
+</main>
 
-    let todosLosProductos = [];
-    let areaActual = "Todas";
-    let subcategoriaActual = "Todas";
-    let productoSeleccionadoId = null;
+<!-- MODAL DE FICHA TÉCNICA -->
+<div id="productModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
+    <button onclick="cerrarModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-1">
+      <i data-lucide="x" class="w-6 h-6"></i>
+    </button>
+    <div id="modalContent"></div>
+  </div>
+</div>
 
-    // Definiendo colores para los botones de las Divisiones en la app
+<!-- SCRIPT LÓGICO -->
+<script>
+const SUPABASE_URL = "https://zvtirryhqxxldceumfjs.supabase.co";
+const SUPABASE_KEY = "sb_publishable_D6OqQEeNZWqXIE9I0qfz_A_9ilgTB4t";
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const CLAVE_ADMIN = "7200";
 
+let modoAdminActivado = false;
+let todosLosProductos = [];
+let productosBusquedaActual = null;
+let areaActual = "Todas";
+let subcategoriaActual = "Todas";
+let productoSeleccionadoId = null;
+
+// Colores por División
 const COLORES_DIVISIONES = {
-    "Abarrotes Básicos": {
-      bg: "rgba(217, 119, 6, 0.15)",
-      border: "#d97706",
-      text: "#f59e0b"
-    },
-    "Checkouts": {
-      bg: "rgba(168, 85, 247, 0.15)",
-      border: "#a855f7",
-      text: "#c084fc"
-    },
-    "Electricos": {
-      bg: "rgba(234, 179, 8, 0.15)",
-      border: "#eab308",
-      text: "#fde047"
-    },
-    "Herrajes": {
-      bg: "rgba(108, 117, 125, 0.2)",
-      border: "#9ca3af",
-      text: "#d1d5db"
-    },
-    "Herramienta": {
-      bg: "rgba(16, 185, 129, 0.15)",
-      border: "#10b981",
-      text: "#6ee7b7"
-    },
-    "Perfiles y Vidrios": {
-      bg: "rgba(0, 212, 255, 0.15)",
-      border: "#00d4ff",
-      text: "#38bdf8"
-    },
-    "Pinturas": {
-      bg: "rgba(236, 72, 153, 0.15)",
-      border: "#ec4899",
-      text: "#f472b6"
-    },
-    "Refacciones Moto": {
-      bg: "rgba(239, 68, 68, 0.15)",
-      border: "#ef4444",
-      text: "#f87171"
-    },
-    
-  
-  // Color por defecto si se agrega una división nueva en el futuro
-  "DEFAULT": {
-    bg: "rgba(99, 102, 241, 0.15)",
-    border: "#6366f1",
-    text: "#818cf8"
-  }
+  "Abarrotes Básicos": { bg: "rgba(217, 119, 6, 0.15)", border: "#d97706", text: "#f59e0b" },
+  "Checkouts":         { bg: "rgba(168, 85, 247, 0.15)", border: "#a855f7", text: "#c084fc" },
+  "Electricos":        { bg: "rgba(234, 179, 8, 0.15)", border: "#eab308", text: "#fde047" },
+  "Herrajes":          { bg: "rgba(108, 117, 125, 0.2)", border: "#9ca3af", text: "#d1d5db" },
+  "Herramienta":       { bg: "rgba(16, 185, 129, 0.15)", border: "#10b981", text: "#6ee7b7" },
+  "Perfiles y Vidrios":{ bg: "rgba(0, 212, 255, 0.15)", border: "#00d4ff", text: "#38bdf8" },
+  "Pinturas":          { bg: "rgba(236, 72, 153, 0.15)", border: "#ec4899", text: "#f472b6" },
+  "Refacciones Moto":  { bg: "rgba(239, 68, 68, 0.15)", border: "#ef4444", text: "#f87171" },
+  "DEFAULT":           { bg: "rgba(99, 102, 241, 0.15)", border: "#6366f1", text: "#818cf8" }
 };
 
+async function cargarCatalogo() {
+  try {
+    const { data: products, error } = await _supabase
+      .from('products')
+      .select(`
+        id,
+        sku,
+        name,
+        description,
+        attributes,
+        categories(name),
+        product_prices(sale_price, cost_price),
+        inventory_stocks(stock_qty)
+      `);
 
-    async function cargarCatalogo() {
-      try {
-        const { data: products, error } = await _supabase
-          .from('products')
-          .select(`
-            id,
-            sku,
-            name,
-            description,
-            attributes,
-            categories ( name ),
-            product_prices ( sale_price, cost_price ),
-            inventory_stocks ( stock_qty )
-          `);
+    if (error) throw error;
 
-        if (error) throw error;
+    todosLosProductos = products.map(p => {
+      let precio = 0;
+      let costo = 0;
+      let stock = 0;
 
-        todosLosProductos = products.map(p => {
-          let precio = 0;
-          let costo = 0;
-          let stock = 0;
-
-          if (p.product_prices) {
-            if (Array.isArray(p.product_prices) && p.product_prices.length > 0) {
-              precio = parseFloat(p.product_prices[0].sale_price) || 0;
-              costo = parseFloat(p.product_prices[0].cost_price) || 0;
-            } else if (typeof p.product_prices === 'object') {
-              precio = parseFloat(p.product_prices.sale_price) || 0;
-              costo = parseFloat(p.product_prices.cost_price) || 0;
-            }
-          }
-
-          if (p.inventory_stocks) {
-            if (Array.isArray(p.inventory_stocks) && p.inventory_stocks.length > 0) {
-              stock = parseInt(p.inventory_stocks[0].stock_qty) || 0;
-            } else if (typeof p.inventory_stocks === 'object') {
-              stock = parseInt(p.inventory_stocks.stock_qty) || 0;
-            }
-          }
-
-          const categoriaNombre = p.categories?.name || p.attributes?.categoria || "General";
-          
-          // 🎯 Lectura directa de la Columna H (Division)
-          const division = p.attributes?.Division || p.attributes?.division || p.division || "Herrajes";
-
-          return {
-            ...p,
-            precio,
-            costo,
-            stock,
-            categoriaNombre,
-            area: division
-          };
-        });
-
-        renderizarTarjetasDivisiones();
-        renderizarProductos();
-        generarSubcategorias();
-      } catch (e) {
-        console.error("Error al cargar productos de Supabase:", e);
+      if (p.product_prices) {
+        if (Array.isArray(p.product_prices) && p.product_prices.length > 0) {
+          precio = parseFloat(p.product_prices[0].sale_price) || 0;
+          costo = parseFloat(p.product_prices[0].cost_price) || 0;
+        } else if (typeof p.product_prices === 'object') {
+          precio = parseFloat(p.product_prices.sale_price) || 0;
+          costo = parseFloat(p.product_prices.cost_price) || 0;
+        }
       }
-    }
 
-    // 🎨 Genera automáticamente las tarjetas superiores según las divisiones encontradas en la Columna H
+      if (p.inventory_stocks) {
+        if (Array.isArray(p.inventory_stocks) && p.inventory_stocks.length > 0) {
+          stock = parseInt(p.inventory_stocks[0].stock_qty) || 0;
+        } else if (typeof p.inventory_stocks === 'object') {
+          stock = parseInt(p.inventory_stocks.stock_qty) || 0;
+        }
+      }
+
+      const categoriaNombre = p.categories?.name || p.attributes?.categoria || "General";
+      const division = p.attributes?.Division || p.attributes?.division || p.division || "Herrajes";
+
+      return {
+        ...p,
+        precio,
+        costo,
+        stock,
+        categoriaNombre,
+        area: division
+      };
+    });
+
+    renderizarTarjetasDivisiones();
+    renderizarProductos();
+  } catch (e) {
+    console.error("Error al cargar productos de Supabase:", e);
+  }
+}
+
+function renderizarTarjetasDivisiones() {
+  const grid = document.getElementById("gridAreas");
+  if (!grid) return;
+
+  const conteoDivisiones = {};
+  todosLosProductos.forEach(p => {
+    const div = p.area || "Herrajes";
+    conteoDivisiones[div] = (conteoDivisiones[div] || 0) + 1;
+  });
+
+  const divisionesUnicas = Object.keys(conteoDivisiones).sort();
+
+  grid.innerHTML = divisionesUnicas.map(div => {
+    const count = conteoDivisiones[div];
+    const isActive = areaActual === div;
+    const estilo = COLORES_DIVISIONES[div] || COLORES_DIVISIONES["DEFAULT"];
     
-    function renderizarTarjetasDivisiones() {
-      const grid = document.getElementById("gridAreas");
-      if (!grid) return;
-      
-      // Contar productos por división
-      const conteoDivisiones = {};
-      todosLosProductos.forEach(p => {
-        const div = p.area || "Herrajes";
-        conteoDivisiones[div] = (conteoDivisiones[div] || 0) + 1;
-      });
+    const estiloCard = isActive
+      ? `background: ${estilo.bg}; border: 2px solid ${estilo.border}; box-shadow: 0 0 15px ${estilo.border}40;`
+      : `background: rgba(30, 41, 59, 0.7); border: 1.5px solid ${estilo.border}80;`;
 
-      const divisionesUnicas = Object.keys(conteoDivisiones).sort();
+    return `
+      <div onclick="seleccionarArea('${div}')" style="${estiloCard}" class="cursor-pointer p-4 rounded-2xl hover:scale-[1.02] transition-all duration-200">
+        <div class="flex justify-between items-start mb-2">
+          <i data-lucide="layers" class="w-6 h-6" style="color: ${estilo.text};"></i>
+          <span class="text-xs font-extrabold px-3 py-0.5 rounded-full" style="background: ${estilo.bg}; color: ${estilo.text}; border: 1px solid ${estilo.border};">
+            ${count} arts
+          </span>
+        </div>
+        <h3 class="font-bold text-slate-100 text-base line-clamp-1">${div}</h3>
+      </div>
+    `;
+  }).join('');
 
-      grid.innerHTML = divisionesUnicas.map(div => {
-        const count = conteoDivisiones[div];
-        const isActive = areaActual === div;
-        
-        // Obtiene la paleta de color para esta división
-        const estilo = COLORES_DIVISIONES[div] || COLORES_DIVISIONES["DEFAULT"];
+  lucide.createIcons();
+}
 
-        const estiloCard = isActive 
-          ? `background: ${estilo.bg}; border: 2px solid ${estilo.border}; box-shadow: 0 0 15px ${estilo.border}40;` 
-          : `background: rgba(30, 41, 59, 0.7); border: 1.5px solid ${estilo.border}80;`;
-
-        return `
-          <div onclick="seleccionarArea('${div}')" 
-               style="${estiloCard}"
-               class="cursor-pointer p-4 rounded-2xl hover:scale-[1.02] transition-all duration-200">
-            <div class="flex justify-between items-start mb-2">
-              <i data-lucide="layers" class="w-6 h-6" style="color: ${estilo.text};"></i>
-              <span class="text-xs font-extrabold px-3 py-0.5 rounded-full" 
-                    style="background: ${estilo.bg}; color: ${estilo.text}; border: 1px solid ${estilo.border};">
-                ${count} arts
-              </span>
-            </div>
-            <h3 class="font-bold text-slate-100 text-base line-clamp-1">${div}</h3>
-          </div>
-        `;
-      }).join('');
-
-      lucide.createIcons();
-    }
-
-    
 function seleccionarArea(area) {
   areaActual = area;
   subcategoriaActual = "Todas";
   
-  // Limpiar buscadores al cambiar manualmente de división
+  // Limpia los buscadores al hacer clic en una división
   const inputDesk = document.getElementById("searchInput");
   const inputMob = document.getElementById("mobileSearchInput");
   if (inputDesk) inputDesk.value = "";
@@ -311,29 +253,23 @@ function seleccionarArea(area) {
 
   document.getElementById("areaTitle").innerText = area === "Todas" ? "Todos los Productos" : area;
   renderizarTarjetasDivisiones();
-  generarSubcategorias();
   renderizarProductos();
 }
 
-function generarSubcategorias(productosFiltradosPorBusqueda = null) {
+function seleccionarSubcategoria(subcat) {
+  subcategoriaActual = subcat;
+  renderizarProductos();
+}
+
+function generarSubcategorias(productosBase) {
   const container = document.getElementById("subcategoriesList");
   const wrapper = document.getElementById("subcategoriesContainer");
 
-  // Si hay una búsqueda activa, usamos los productos de la búsqueda. 
-  // Si no, filtramos por la división seleccionada arriba.
-  let productosBase = [];
-  
-  if (productosFiltradosPorBusqueda !== null) {
-    productosBase = productosFiltradosPorBusqueda;
-  } else if (areaActual !== "Todas") {
-    productosBase = todosLosProductos.filter(p => p.area === areaActual);
-  } else {
-    // Si está en "Todas" y no hay búsqueda, ocultamos la barra
+  if (!productosBase || productosBase.length === 0) {
     if (wrapper) wrapper.classList.add("hidden");
     return;
   }
 
-  // Extraer las subcategorías únicas presentes en los productos resultantes
   const categoriasUnicas = [...new Set(productosBase.map(p => p.categoriaNombre))].filter(Boolean).sort();
 
   if (categoriasUnicas.length === 0) {
@@ -371,8 +307,8 @@ function renderizarProductos() {
   let filtrados = [];
 
   if (busqueda !== "") {
-    // 1. Filtrado Global cuando el usuario escribe
-    filtrados = todosLosProductos.filter(p => {
+    // Búsqueda activa
+    const coincidenciasBusqueda = todosLosProductos.filter(p => {
       return (
         p.name.toLowerCase().includes(busqueda) ||
         p.sku.toLowerCase().includes(busqueda) ||
@@ -382,31 +318,39 @@ function renderizarProductos() {
       );
     });
 
-    // Actualizar Título dinámico
+    productosBusquedaActual = coincidenciasBusqueda;
     document.getElementById("areaTitle").innerText = `Resultados para "${busqueda}"`;
 
-    // Actualizar la barra de subcategorías DINÁMICAMENTE con los productos encontrados
-    generarSubcategorias(filtrados);
+    generarSubcategorias(coincidenciasBusqueda);
 
-    // Si la subcategoría seleccionada previamente no existe entre los resultados encontrados, reiniciar a "Todas"
     if (subcategoriaActual !== "Todas") {
-      filtrados = filtrados.filter(p => p.categoriaNombre === subcategoriaActual);
+      filtrados = coincidenciasBusqueda.filter(p => p.categoriaNombre === subcategoriaActual);
+    } else {
+      filtrados = coincidenciasBusqueda;
     }
 
   } else {
-    // 2. Comportamiento Normal por Clics en Divisiones
+    // Navegación por Divisiones
+    productosBusquedaActual = null;
     document.getElementById("areaTitle").innerText = areaActual === "Todas" ? "Todos los Productos" : areaActual;
-    
-    generarSubcategorias(null);
 
-    filtrados = todosLosProductos.filter(p => {
-      const coincideArea = areaActual === "Todas" || p.area === areaActual;
-      const coincideSubcat = subcategoriaActual === "Todas" || p.categoriaNombre === subcategoriaActual;
-      return coincideArea && coincideSubcat;
+    let productosDelArea = areaActual === "Todas" 
+      ? todosLosProductos 
+      : todosLosProductos.filter(p => p.area === areaActual);
+
+    if (areaActual !== "Todas") {
+      generarSubcategorias(productosDelArea);
+    } else {
+      const wrapper = document.getElementById("subcategoriesContainer");
+      if (wrapper) wrapper.classList.add("hidden");
+    }
+
+    filtrados = productosDelArea.filter(p => {
+      return subcategoriaActual === "Todas" || p.categoriaNombre === subcategoriaActual;
     });
   }
 
-  // Actualizar contador
+  // Contador de resultados
   const counterEl = document.getElementById("productCounter");
   if (counterEl) {
     counterEl.innerText = `${filtrados.length} productos`;
@@ -417,15 +361,15 @@ function renderizarProductos() {
     grid.innerHTML = `
       <div class="col-span-full text-center py-12 text-slate-400">
         <i data-lucide="search-x" class="w-12 h-12 mx-auto mb-3 text-slate-600"></i>
-        <p class="text-base font-semibold">No se encontraron productos que coincidan con "${busqueda}".</p>
-        <p class="text-xs text-slate-500 mt-1">Prueba buscando con otro término o SKU.</p>
+        <p class="text-base font-semibold">No se encontraron productos que coincidan.</p>
+        <p class="text-xs text-slate-500 mt-1">Prueba seleccionando otra subcategoría o cambiando el término de búsqueda.</p>
       </div>
     `;
     lucide.createIcons();
     return;
   }
 
-  // Renderizar tarjetas de productos
+  // Renderizar tarjetas
   grid.innerHTML = filtrados.map(p => {
     const esPrecioCero = p.precio <= 0;
     const estiloDiv = COLORES_DIVISIONES[p.area] || COLORES_DIVISIONES["DEFAULT"];
@@ -473,107 +417,111 @@ function renderizarProductos() {
   lucide.createIcons();
 }
 
-    function verFichaTecnica(id) {
-      productoSeleccionadoId = id;
-      const p = todosLosProductos.find(item => item.id === id);
-      if (!p) return;
+function verFichaTecnica(id) {
+  productoSeleccionadoId = id;
+  const p = todosLosProductos.find(item => item.id === id);
+  if (!p) return;
 
-      const esPrecioCero = p.precio <= 0;
-      const margen = p.precio > 0 ? (((p.precio - p.costo) / p.precio) * 100).toFixed(1) : 0;
+  const esPrecioCero = p.precio <= 0;
+  const margen = p.precio > 0 ? (((p.precio - p.costo) / p.precio) * 100).toFixed(1) : 0;
 
-      let htmlPrecioModal = esPrecioCero
-        ? `<div><p class="text-xs text-slate-400">ESTADO</p><p class="text-lg font-bold text-amber-400">Precio por definir</p></div>`
-        : `<div><p class="text-xs text-slate-400">PRECIO VENTA</p><p class="text-xl font-bold text-emerald-400">$${p.precio.toFixed(2)}</p></div>`;
+  let htmlPrecioModal = esPrecioCero
+    ? `<div><p class="text-xs text-slate-400">ESTADO</p><p class="text-lg font-bold text-amber-400">Precio por definir</p></div>`
+    : `<div><p class="text-xs text-slate-400">PRECIO VENTA</p><p class="text-xl font-bold text-emerald-400">$${p.precio.toFixed(2)}</p></div>`;
 
-      let htmlBotonWA = esPrecioCero
-        ? `<div class="w-full bg-amber-600/30 border border-amber-500/50 text-amber-200 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-center text-sm">
-             <i data-lucide="clock" class="w-5 h-5 text-amber-400"></i> Próximamente a la venta
-           </div>`
-        : `<a href="https://wa.me/?text=Hola,%20me%20interesa%20el%20producto%20${encodeURIComponent(p.name)}%20(SKU:%20${p.sku})" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition">
-             <i data-lucide="message-square" class="w-5 h-5"></i> Enviar Pedido por WhatsApp
-           </a>`;
+  let htmlBotonWA = esPrecioCero
+    ? `<div class="w-full bg-amber-600/30 border border-amber-500/50 text-amber-200 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-center text-sm">
+        <i data-lucide="clock" class="w-5 h-5 text-amber-400"></i> Próximamente a la venta
+      </div>`
+    : `<a href="https://wa.me/?text=Hola,%20me%20interesa%20el%20producto%20${encodeURIComponent(p.name)}%20(SKU:%20${p.sku})" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition">
+        <i data-lucide="message-square" class="w-5 h-5"></i> Enviar Pedido por WhatsApp
+      </a>`;
 
-      let htmlAdminSection = '';
+  let htmlAdminSection = '';
+  if (modoAdminActivado) {
+    htmlAdminSection = `
+      <div class="bg-slate-800 p-3 rounded-xl border border-amber-500/40 mb-4 text-xs space-y-1">
+        <p class="font-bold text-amber-400 flex items-center justify-between">
+          <span>Información de Propietario</span>
+          <button onclick="desactivarModoAdmin()" class="text-[10px] text-slate-400 hover:text-white underline">Cerrar sesión admin</button>
+        </p>
+        <div class="flex justify-between text-slate-300"><span>Costo Directo:</span><span class="font-mono font-bold">$${p.costo.toFixed(2)}</span></div>
+        <div class="flex justify-between text-slate-300"><span>Margen Bruto:</span><span class="font-mono font-bold text-amber-300">${margen}%</span></div>
+      </div>
+    `;
+  } else {
+    htmlAdminSection = `
+      <div class="mb-4 text-center">
+        <button onclick="solicitarClaveAdmin()" class="text-xs text-slate-500 hover:text-slate-300 flex items-center justify-center gap-1 mx-auto py-1 px-3 bg-slate-800/60 rounded-lg border border-slate-700/50 transition">
+          <i data-lucide="lock" class="w-3 h-3"></i> Acceso Propietario
+        </button>
+      </div>
+    `;
+  }
 
-      if (modoAdminActivado) {
-        htmlAdminSection = `
-          <div class="bg-slate-800 p-3 rounded-xl border border-amber-500/40 mb-4 text-xs space-y-1">
-            <p class="font-bold text-amber-400 flex items-center justify-between">
-              <span>🔒 Información de Propietario</span>
-              <button onclick="desactivarModoAdmin()" class="text-[10px] text-slate-400 hover:text-white underline">Cerrar sesión admin</button>
-            </p>
-            <div class="flex justify-between text-slate-300"><span>Costo Directo:</span><span class="font-mono font-bold">$${p.costo.toFixed(2)}</span></div>
-            <div class="flex justify-between text-slate-300"><span>Margen Bruto:</span><span class="font-mono font-bold text-amber-300">${margen}%</span></div>
-          </div>
-        `;
-      } else {
-        htmlAdminSection = `
-          <div class="mb-4 text-center">
-            <button onclick="solicitarClaveAdmin()" class="text-xs text-slate-500 hover:text-slate-300 flex items-center justify-center gap-1 mx-auto py-1 px-3 bg-slate-800/60 rounded-lg border border-slate-700/50 transition">
-              <i data-lucide="lock" class="w-3 h-3"></i> Acceso Propietario
-            </button>
-          </div>
-        `;
-      }
+  document.getElementById("modalContent").innerHTML = `
+    <div class="text-center mb-4">
+      <img src="${p.attributes?.imagen_url || 'https://via.placeholder.com/200'}" class="h-48 mx-auto object-contain rounded-lg mb-2" />
+      <div class="flex items-center justify-center gap-2">
+        ${esPrecioCero ? '<span class="text-xs font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md">¡NUEVO ARTÍCULO!</span>' : ''}
+        <span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md">${p.categoriaNombre}</span>
+      </div>
+      <h2 class="text-lg font-bold text-slate-100 mt-2">${p.name}</h2>
+      <p class="text-xs text-slate-400 font-mono">SKU: ${p.sku}</p>
+    </div>
+    <p class="text-xs text-slate-300 mb-4 bg-slate-800 p-3 rounded-lg">${p.description}</p>
+    <div class="grid grid-cols-2 gap-3 mb-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
+      ${htmlPrecioModal}
+      <div>
+        <p class="text-xs text-slate-400">EXISTENCIAS</p>
+        <p class="text-xl font-bold text-slate-200">${p.stock} unidades</p>
+      </div>
+    </div>
+    ${htmlAdminSection}
+    ${htmlBotonWA}
+  `;
 
-      document.getElementById("modalContent").innerHTML = `
-        <div class="text-center mb-4">
-          <img src="${p.attributes?.imagen_url || 'https://via.placeholder.com/200'}" class="h-48 mx-auto object-contain rounded-lg mb-2" />
-          <div class="flex items-center justify-center gap-2">
-            ${esPrecioCero ? '<span class="text-xs font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-md">¡NUEVO ARTÍCULO!</span>' : ''}
-            <span class="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md">${p.categoriaNombre}</span>
-          </div>
-          <h2 class="text-lg font-bold text-slate-100 mt-2">${p.name}</h2>
-          <p class="text-xs text-slate-400 font-mono">SKU: ${p.sku}</p>
-        </div>
-        <p class="text-xs text-slate-300 mb-4 bg-slate-800 p-3 rounded-lg">${p.description}</p>
-        
-        <div class="grid grid-cols-2 gap-3 mb-4 bg-slate-800/50 p-3 rounded-xl border border-slate-700">
-          ${htmlPrecioModal}
-          <div>
-            <p class="text-xs text-slate-400">EXISTENCIAS</p>
-            <p class="text-xl font-bold text-slate-200">${p.stock} unidades</p>
-          </div>
-        </div>
+  document.getElementById("productModal").classList.remove("hidden");
+  lucide.createIcons();
+}
 
-        ${htmlAdminSection}
-        ${htmlBotonWA}
-      `;
+function solicitarClaveAdmin() {
+  const pass = prompt("Ingrese su clave de propietario:");
+  if (pass === CLAVE_ADMIN) {
+    modoAdminActivado = true;
+    verFichaTecnica(productoSeleccionadoId);
+  } else if (pass !== null) {
+    alert("❌ Clave incorrecta.");
+  }
+}
 
-      document.getElementById("productModal").classList.remove("hidden");
-      lucide.createIcons();
-    }
+function desactivarModoAdmin() {
+  modoAdminActivado = false;
+  verFichaTecnica(productoSeleccionadoId);
+}
 
-    function solicitarClaveAdmin() {
-      const pass = prompt("Ingrese su clave de propietario:");
-      if (pass === CLAVE_ADMIN) {
-        modoAdminActivado = true;
-        verFichaTecnica(productoSeleccionadoId);
-      } else if (pass !== null) {
-        alert("❌ Clave incorrecta.");
-      }
-    }
+function cerrarModal() {
+  document.getElementById("productModal").classList.add("hidden");
+}
 
-    function desactivarModoAdmin() {
-      modoAdminActivado = false;
-      verFichaTecnica(productoSeleccionadoId);
-    }
+function toggleMobileSearch() {
+  document.getElementById("mobileSearchContainer").classList.toggle("hidden");
+}
 
-    function cerrarModal() {
-      document.getElementById("productModal").classList.add("hidden");
-    }
+function filtrarProductos() {
+  subcategoriaActual = "Todas";
+  renderizarProductos();
+}
 
-    function toggleMobileSearch() {
-      document.getElementById("mobileSearchContainer").classList.toggle("hidden");
-    }
+function filtrarProductosMobile() {
+  subcategoriaActual = "Todas";
+  renderizarProductos();
+}
 
-    function filtrarProductos() { renderizarProductos(); }
-    function filtrarProductosMobile() { renderizarProductos(); }
-
-    window.onload = () => {
-      lucide.createIcons();
-      cargarCatalogo();
-    };
-  </script>
+window.onload = () => {
+  lucide.createIcons();
+  cargarCatalogo();
+};
+</script>
 </body>
 </html>
