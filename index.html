@@ -27,7 +27,6 @@ tailwind.config = {
 </script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen pb-12 transition-colors duration-200">
-
 <!-- HEADER / BARRA SUPERIOR -->
 <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur border-b border-slate-800 shadow-lg">
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
@@ -43,7 +42,6 @@ tailwind.config = {
         <p class="text-xs text-slate-400">Catálogo General y Subcategorías</p>
       </div>
     </div>
-
     <!-- BUSCADOR DESKTOP -->
     <div class="relative flex-1 max-w-md hidden md:block">
       <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
@@ -55,13 +53,11 @@ tailwind.config = {
         class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
-
     <!-- BOTÓN BÚSQUEDA MÓVIL -->
     <button onclick="toggleMobileSearch()" class="md:hidden p-2 text-slate-400 hover:text-white">
       <i data-lucide="search" class="w-6 h-6"></i>
     </button>
   </div>
-
   <!-- BUSCADOR MÓVIL -->
   <div id="mobileSearchContainer" class="hidden px-4 pb-3 md:hidden">
     <input
@@ -73,14 +69,12 @@ tailwind.config = {
     />
   </div>
 </header>
-
 <!-- CONTENIDO PRINCIPAL -->
 <main class="max-w-7xl mx-auto px-4 mt-6">
   <!-- CONTENEDOR DINÁMICO DE DIVISIONES/NEGOCIOS -->
   <div id="gridAreas" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
     <!-- Se llenará automáticamente con las Divisiones -->
   </div>
-
   <!-- BARRA DINÁMICA DE SUBCATEGORÍAS -->
   <div id="subcategoriesContainer" class="mb-6 p-4 bg-slate-800/50 border border-slate-700/60 rounded-2xl hidden">
     <div class="flex items-center justify-between mb-3">
@@ -94,19 +88,16 @@ tailwind.config = {
       <!-- Se llena dinámicamente -->
     </div>
   </div>
-
   <!-- ENCABEZADO DE RESULTADOS -->
   <div class="flex items-center justify-between mb-4">
     <h2 id="areaTitle" class="text-lg font-bold text-slate-200">Todos los Productos</h2>
     <span id="productCounter" class="text-xs text-slate-400">Cargando productos...</span>
   </div>
-
   <!-- REJILLA DE PRODUCTOS -->
   <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
     <!-- Cargado dinámicamente -->
   </div>
 </main>
-
 <!-- MODAL DE FICHA TÉCNICA -->
 <div id="productModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
   <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
@@ -116,14 +107,12 @@ tailwind.config = {
     <div id="modalContent"></div>
   </div>
 </div>
-
 <!-- SCRIPT LÓGICO -->
 <script>
 const SUPABASE_URL = "https://zvtirryhqxxldceumfjs.supabase.co";
 const SUPABASE_KEY = "sb_publishable_D6OqQEeNZWqXIE9I0qfz_A_9ilgTB4t";
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const CLAVE_ADMIN = "7200";
-
 let modoAdminActivado = false;
 let todosLosProductos = [];
 let productosBusquedaActual = null;
@@ -158,14 +147,11 @@ async function cargarCatalogo() {
         product_prices(sale_price, cost_price),
         inventory_stocks(stock_qty)
       `);
-
     if (error) throw error;
-
     todosLosProductos = products.map(p => {
       let precio = 0;
       let costo = 0;
       let stock = 0;
-
       if (p.product_prices) {
         if (Array.isArray(p.product_prices) && p.product_prices.length > 0) {
           precio = parseFloat(p.product_prices[0].sale_price) || 0;
@@ -175,7 +161,6 @@ async function cargarCatalogo() {
           costo = parseFloat(p.product_prices.cost_price) || 0;
         }
       }
-
       if (p.inventory_stocks) {
         if (Array.isArray(p.inventory_stocks) && p.inventory_stocks.length > 0) {
           stock = parseInt(p.inventory_stocks[0].stock_qty) || 0;
@@ -183,10 +168,8 @@ async function cargarCatalogo() {
           stock = parseInt(p.inventory_stocks.stock_qty) || 0;
         }
       }
-
       const categoriaNombre = p.categories?.name || p.attributes?.categoria || "General";
       const division = p.attributes?.Division || p.attributes?.division || p.division || "Herrajes";
-
       return {
         ...p,
         precio,
@@ -196,7 +179,6 @@ async function cargarCatalogo() {
         area: division
       };
     });
-
     renderizarTarjetasDivisiones();
     renderizarProductos();
   } catch (e) {
@@ -207,15 +189,12 @@ async function cargarCatalogo() {
 function renderizarTarjetasDivisiones() {
   const grid = document.getElementById("gridAreas");
   if (!grid) return;
-
   const conteoDivisiones = {};
   todosLosProductos.forEach(p => {
     const div = p.area || "Herrajes";
     conteoDivisiones[div] = (conteoDivisiones[div] || 0) + 1;
   });
-
   const divisionesUnicas = Object.keys(conteoDivisiones).sort();
-
   grid.innerHTML = divisionesUnicas.map(div => {
     const count = conteoDivisiones[div];
     const isActive = areaActual === div;
@@ -224,7 +203,6 @@ function renderizarTarjetasDivisiones() {
     const estiloCard = isActive
       ? `background: ${estilo.bg}; border: 2px solid ${estilo.border}; box-shadow: 0 0 15px ${estilo.border}40;`
       : `background: rgba(30, 41, 59, 0.7); border: 1.5px solid ${estilo.border}80;`;
-
     return `
       <div onclick="seleccionarArea('${div}')" style="${estiloCard}" class="cursor-pointer p-4 rounded-2xl hover:scale-[1.02] transition-all duration-200">
         <div class="flex justify-between items-start mb-2">
@@ -237,20 +215,16 @@ function renderizarTarjetasDivisiones() {
       </div>
     `;
   }).join('');
-
   lucide.createIcons();
 }
 
 function seleccionarArea(area) {
   areaActual = area;
   subcategoriaActual = "Todas";
-  
-  // Limpia los buscadores al hacer clic en una división
   const inputDesk = document.getElementById("searchInput");
   const inputMob = document.getElementById("mobileSearchInput");
   if (inputDesk) inputDesk.value = "";
   if (inputMob) inputMob.value = "";
-
   document.getElementById("areaTitle").innerText = area === "Todas" ? "Todos los Productos" : area;
   renderizarTarjetasDivisiones();
   renderizarProductos();
@@ -264,27 +238,21 @@ function seleccionarSubcategoria(subcat) {
 function generarSubcategorias(productosBase) {
   const container = document.getElementById("subcategoriesList");
   const wrapper = document.getElementById("subcategoriesContainer");
-
   if (!productosBase || productosBase.length === 0) {
     if (wrapper) wrapper.classList.add("hidden");
     return;
   }
-
   const categoriasUnicas = [...new Set(productosBase.map(p => p.categoriaNombre))].filter(Boolean).sort();
-
   if (categoriasUnicas.length === 0) {
     if (wrapper) wrapper.classList.add("hidden");
     return;
   }
-
   if (wrapper) wrapper.classList.remove("hidden");
-
   let html = `
     <button onclick="seleccionarSubcategoria('Todas')" class="px-3 py-1 rounded-lg text-xs font-semibold transition ${subcategoriaActual === 'Todas' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}">
       Todas (${productosBase.length})
     </button>
   `;
-
   categoriasUnicas.forEach(cat => {
     const count = productosBase.filter(p => p.categoriaNombre === cat).length;
     const isActive = subcategoriaActual === cat;
@@ -294,7 +262,6 @@ function generarSubcategorias(productosBase) {
       </button>
     `;
   });
-
   container.innerHTML = html;
 }
 
@@ -303,11 +270,8 @@ function renderizarProductos() {
   const inputDesk = document.getElementById("searchInput")?.value || "";
   const inputMob = document.getElementById("mobileSearchInput")?.value || "";
   const busqueda = (inputDesk || inputMob).toLowerCase().trim();
-
   let filtrados = [];
-
   if (busqueda !== "") {
-    // Búsqueda activa
     const coincidenciasBusqueda = todosLosProductos.filter(p => {
       return (
         p.name.toLowerCase().includes(busqueda) ||
@@ -317,46 +281,36 @@ function renderizarProductos() {
         (p.description && p.description.toLowerCase().includes(busqueda))
       );
     });
-
     productosBusquedaActual = coincidenciasBusqueda;
     document.getElementById("areaTitle").innerText = `Resultados para "${busqueda}"`;
-
     generarSubcategorias(coincidenciasBusqueda);
-
     if (subcategoriaActual !== "Todas") {
       filtrados = coincidenciasBusqueda.filter(p => p.categoriaNombre === subcategoriaActual);
     } else {
       filtrados = coincidenciasBusqueda;
     }
-
   } else {
-    // Navegación por Divisiones
     productosBusquedaActual = null;
     document.getElementById("areaTitle").innerText = areaActual === "Todas" ? "Todos los Productos" : areaActual;
-
     let productosDelArea = areaActual === "Todas" 
       ? todosLosProductos 
       : todosLosProductos.filter(p => p.area === areaActual);
-
     if (areaActual !== "Todas") {
       generarSubcategorias(productosDelArea);
     } else {
       const wrapper = document.getElementById("subcategoriesContainer");
       if (wrapper) wrapper.classList.add("hidden");
     }
-
     filtrados = productosDelArea.filter(p => {
       return subcategoriaActual === "Todas" || p.categoriaNombre === subcategoriaActual;
     });
   }
 
-  // Contador de resultados
   const counterEl = document.getElementById("productCounter");
   if (counterEl) {
     counterEl.innerText = `${filtrados.length} productos`;
   }
 
-  // Si no hay resultados
   if (filtrados.length === 0) {
     grid.innerHTML = `
       <div class="col-span-full text-center py-12 text-slate-400">
@@ -369,20 +323,24 @@ function renderizarProductos() {
     return;
   }
 
-  // Renderizar tarjetas
   grid.innerHTML = filtrados.map(p => {
     const esPrecioCero = p.precio <= 0;
+    const sinStock = p.stock === 0;
     const estiloDiv = COLORES_DIVISIONES[p.area] || COLORES_DIVISIONES["DEFAULT"];
     
     const htmlPrecio = esPrecioCero
       ? `<span class="text-sm font-bold text-amber-400">Precio por definir</span>`
       : `<p class="text-lg font-bold text-emerald-400">$${p.precio.toFixed(2)}</p>`;
-
     const badgeDivision = `<span class="text-[10px] font-bold px-2 py-0.5 rounded-md border" style="background: ${estiloDiv.bg}; color: ${estiloDiv.text}; border-color: ${estiloDiv.border};">${p.area}</span>`;
     
     const badgeNuevo = esPrecioCero
       ? `<span class="text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-md uppercase tracking-wider">¡Nuevo!</span>`
       : `<span class="text-xs font-semibold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">${p.categoriaNombre}</span>`;
+    
+    // Regla de color rojo brillante o badge de stock
+    const badgeStockHtml = sinStock
+      ? `<span class="text-xs px-2.5 py-1 rounded-full bg-red-600/20 text-red-400 font-bold border border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]">Agotado: 0</span>`
+      : `<span class="text-xs px-2 py-1 rounded-full ${p.stock > 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}">Disponibles: ${p.stock}</span>`;
 
     return `
       <div onclick="verFichaTecnica('${p.id}')" class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-between hover:border-slate-500 transition cursor-pointer shadow-md">
@@ -405,15 +363,12 @@ function renderizarProductos() {
             ${htmlPrecio}
           </div>
           <div class="text-right">
-            <span class="text-xs px-2 py-1 rounded-full ${p.stock > 3 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'}">
-              Disponibles: ${p.stock}
-            </span>
+            ${badgeStockHtml}
           </div>
         </div>
       </div>
     `;
   }).join('');
-
   lucide.createIcons();
 }
 
@@ -421,21 +376,32 @@ function verFichaTecnica(id) {
   productoSeleccionadoId = id;
   const p = todosLosProductos.find(item => item.id === id);
   if (!p) return;
-
   const esPrecioCero = p.precio <= 0;
+  const sinStock = p.stock === 0;
   const margen = p.precio > 0 ? (((p.precio - p.costo) / p.precio) * 100).toFixed(1) : 0;
-
+  
   let htmlPrecioModal = esPrecioCero
     ? `<div><p class="text-xs text-slate-400">ESTADO</p><p class="text-lg font-bold text-amber-400">Precio por definir</p></div>`
     : `<div><p class="text-xs text-slate-400">PRECIO VENTA</p><p class="text-xl font-bold text-emerald-400">$${p.precio.toFixed(2)}</p></div>`;
-
-  let htmlBotonWA = esPrecioCero
-    ? `<div class="w-full bg-amber-600/30 border border-amber-500/50 text-amber-200 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-center text-sm">
+  
+  // Botón de WhatsApp bloqueado si no hay inventario
+  let htmlBotonWA = '';
+  if (sinStock) {
+    htmlBotonWA = `
+      <div onclick="alert('No hay artículos disponibles para hacer el pedido.')" class="w-full bg-slate-800 border border-red-500/50 text-red-400 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-center text-sm cursor-pointer shadow-[0_0_10px_rgba(239,68,68,0.2)] hover:bg-slate-750 transition">
+        <i data-lucide="ban" class="w-5 h-5 text-red-500"></i> No hay artículos disponibles para hacer el pedido
+      </div>`;
+  } else if (esPrecioCero) {
+    htmlBotonWA = `
+      <div class="w-full bg-amber-600/30 border border-amber-500/50 text-amber-200 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-center text-sm">
         <i data-lucide="clock" class="w-5 h-5 text-amber-400"></i> Próximamente a la venta
-      </div>`
-    : `<a href="https://wa.me/?text=Hola,%20me%20interesa%20el%20producto%20${encodeURIComponent(p.name)}%20(SKU:%20${p.sku})" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition">
+      </div>`;
+  } else {
+    htmlBotonWA = `
+      <a href="https://wa.me/?text=Hola,%20me%20interesa%20el%20producto%20${encodeURIComponent(p.name)}%20(SKU:%20${p.sku})" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition">
         <i data-lucide="message-square" class="w-5 h-5"></i> Enviar Pedido por WhatsApp
       </a>`;
+  }
 
   let htmlAdminSection = '';
   if (modoAdminActivado) {
@@ -474,13 +440,14 @@ function verFichaTecnica(id) {
       ${htmlPrecioModal}
       <div>
         <p class="text-xs text-slate-400">EXISTENCIAS</p>
-        <p class="text-xl font-bold text-slate-200">${p.stock} unidades</p>
+        <p class="text-xl font-bold ${sinStock ? 'text-red-400 animate-pulse font-extrabold' : 'text-slate-200'}">
+          ${p.stock} unidades
+        </p>
       </div>
     </div>
     ${htmlAdminSection}
     ${htmlBotonWA}
   `;
-
   document.getElementById("productModal").classList.remove("hidden");
   lucide.createIcons();
 }
