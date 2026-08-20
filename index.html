@@ -577,28 +577,38 @@ async function solicitarVenta() {
     return;
   }
 
-  const respuesta = prompt(`Producto: ${productoSeleccionadoModal.name}\nExistencias actuales: ${stockActual}\n\n¿Cuántas unidades deseas vender?`, "1");
-  if (respuesta === null) return;
-
-  const cantidadVenta = parseInt(respuesta);
-  if (isNaN(cantidadVenta) || cantidadVenta <= 0) {
-    alert("Ingresa una cantidad válida.");
+  const respuestaCantidad = prompt(`Producto: ${productoSeleccionadoModal.name}\nExistencias: ${stockActual}\n\n¿Cuántas unidades deseas registrar en Salidas?`, "1");
+  if (respuestaCantidad === null) return;
+  const cantidadVenta = parseInt(respuestaCantidad);
+  if (isNaN(cantidadVenta) || cantidadVenta <= 0 || cantidadVenta > stockActual) {
+    alert("Cantidad inválida o superior al stock disponible.");
     return;
   }
 
-  if (cantidadVenta > stockActual) {
-    alert(`No puedes vender ${cantidadVenta} unidades. Solo hay ${stockActual} disponibles.`);
-    return;
-  }
+  // 1. Pregunta el Tipo de Movimiento (Columna D: Venta, Taller, Ajuste de inventario, etc.)
+  const movimiento = prompt("Tipo de Movimiento:\n- Venta\n- Taller\n- Ajuste de inventario", "Venta");
+  if (movimiento === null) return;
 
-  await ejecutarTransaccionVenta(productoSeleccionadoModal, cantidadVenta);
+  // 2. Pregunta las Notas opcionales (Columna E: Ej. nombre de cliente o referencia)
+  const notas = prompt("Notas o referencia adicional (Ej. Cliente o motivo):", "");
+  if (notas === null) return;
+
+  // Llama a la función de ejecución pasándole los datos recolectados
+  await ejecutarTransaccionVenta(productoSeleccionadoModal, cantidadVenta, movimiento, notas);
 }
 
-async function ejecutarTransaccionVenta(producto, cantidad) {
+async function ejecutarTransaccionVenta(producto, cantidad, movimiento, notas) {
   const nuevoStock = producto.stock - cantidad;
   const totalVenta = cantidad * producto.precio;
 
+  // Obtiene la fecha actual en formato DD/MM/YYYY idéntico a tu hoja
+  const hoy = new Date();
+  const fechaFormateada = String(hoy.getDate()).padStart(2, '0') + '/' + 
+                          String(hoy.getMonth() + 1).padStart(2, '0') + '/' + 
+                          hoy.getFullYear();
+
   try {
+    // 1. Actualiza el stock restando en Supabase
     const { error: errSupabase } = await _supabase
       .from('inventory_stocks')
       .update({ stock_qty: nuevoStock })
@@ -606,32 +616,34 @@ async function ejecutarTransaccionVenta(producto, cantidad) {
 
     if (errSupabase) throw errSupabase;
 
-    // Envío opcional a Google Sheets si se configura la URL
+    // 2. Envía los datos ordenados exactamente con tus columnas de Google Sheets
     if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "TU_URL_DE_APPS_SCRIPT_AQUI") {
       fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fecha: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString(),
-          producto: producto.name,
-          cantidad: cantidad,
-          sku: producto.sku || "N/A",
-          total: totalVenta,
-          notas: "Venta Web Directa"
+          fecha: fechaFormateada,       // Columna A: Fecha
+          producto: producto.name,       // Columna B: Producto o Artículo
+          cantidad: cantidad,            // Columna C: Cantidad
+          movimiento: movimiento,        // Columna D: Movimiento
+          notas: notas || "",            // Columna E: Notas
+          sku: producto.sku || "N/A",    // Columna F: SKU
+          total: totalVenta              // Columna G: Total
         })
       }).catch(e => console.warn("No se pudo registrar en Google Sheets:", e));
     }
 
-    alert(`¡Venta realizada con éxito!\nProducto: ${producto.name}\nCantidad: ${cantidad}\nTotal: $${totalVenta.toFixed(2)}`);
+    alert(`¡Salida registrada con éxito!\n\n- Producto: ${producto.name}\n- Cantidad: ${cantidad}\n- Movimiento: ${movimiento}\n- Total: $${totalVenta.toFixed(2)}`);
     
+    // Actualiza visualmente el stock en el modal y la rejilla principal
     producto.stock = nuevoStock;
     document.getElementById('modalStock').textContent = `${nuevoStock} unidades`;
     renderizarProductos();
 
   } catch (err) {
     console.error("Error en la transacción:", err);
-    alert("Ocurrió un error al procesar la venta.");
+    alert("Ocurrió un error al procesar la salida de inventario.");
   }
 }
 
