@@ -617,7 +617,7 @@ async function ejecutarTransaccionVenta(producto, cantidad, movimiento, notas) {
     if (errSupabase) throw errSupabase;
 
     // 2. Envía los datos ordenados exactamente con tus columnas de Google Sheets
-    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "TU_URL_DE_APPS_SCRIPT_AQUI") {
+    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "https://script.google.com/macros/s/AKfycbx3rhMyBY3ZmIW2cR6OUl-mvHYVlSJ6Z3f0TeL8vIWW-Yr5w4-wSiDnsM1epqxyfq5kRw/execTU_URL_DE_APPS_SCRIPT_AQUI") {
       fetch(GOOGLE_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
